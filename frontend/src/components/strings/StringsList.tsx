@@ -7,7 +7,7 @@ import {
   useDeleteString,
   useRemoveString,
   useRestoreString,
-} from "@/hooks/useApi";
+} from "@/hooks/useStrings";
 import {
   Button,
   Modal,

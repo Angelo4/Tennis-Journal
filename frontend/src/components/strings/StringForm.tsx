@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useCreateString, useUpdateString } from "@/hooks/useApi";
+import { useCreateString, useUpdateString } from "@/hooks/useStrings";
 import type { TennisString, CreateTennisStringRequest } from "@/api";
 import {
   Button,

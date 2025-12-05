@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import type { TennisSession } from "@/api";
-import { useSessions, useDeleteSession, useStrings } from "@/hooks/useApi";
+import { useSessions, useDeleteSession } from "@/hooks/useSessions";
+import { useStrings } from "@/hooks/useStrings";
 import {
   Button,
   Modal,

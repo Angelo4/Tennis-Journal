@@ -24,7 +24,8 @@ import {
   Legend,
 } from "recharts";
 
-import { useStrings, useSessions } from "@/hooks/useApi";
+import { useSessions } from "@/hooks/useSessions";
+import { useStrings } from "@/hooks/useStrings";
 import type { TennisString, TennisSession } from "@/api";
 import { Tabs, StatCard, LoadingContainer } from "@/components/ui";
 import { ChartContainer } from "@/components/charts";

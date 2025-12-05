@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useCreateSession, useUpdateSession, useStrings } from "@/hooks/useApi";
+import { useCreateSession, useUpdateSession } from "@/hooks/useSessions";
+import { useStrings } from "@/hooks/useStrings";
 import type { TennisSession, CreateTennisSessionRequest } from "@/api";
 import {
   Button,

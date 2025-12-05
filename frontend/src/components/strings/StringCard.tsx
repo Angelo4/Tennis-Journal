@@ -1,7 +1,7 @@
 "use client";
 
 import type { TennisString } from "@/api";
-import { useStringUsage } from "@/hooks/useApi";
+import { useStringUsage } from "@/hooks/useStrings";
 import { Card, CardHeader, CardBody, CardFooter, Badge, Button } from "@/components/ui";
 import { STRING_TYPE_LABELS } from "@/utils/constants";
 import { formatDate, formatTension } from "@/utils/formatters";
