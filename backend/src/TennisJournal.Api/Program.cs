@@ -9,7 +9,7 @@ builder.Services.AddControllers();
 
 // Add Application and Infrastructure layers
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 // Configure OpenAPI/Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -35,6 +35,9 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Initialize Cosmos DB (create database and containers if they don't exist)
+await app.Services.InitializeCosmosDbAsync();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
