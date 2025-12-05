@@ -2,7 +2,7 @@ using TennisJournal.Application.Interfaces;
 using TennisJournal.Domain.Entities;
 using TennisJournal.Domain.Enums;
 
-namespace TennisJournal.Infrastructure.Persistence;
+namespace TennisJournal.Infrastructure.Persistence.InMemory;
 
 /// <summary>
 /// In-memory implementation of ISessionRepository for development.
