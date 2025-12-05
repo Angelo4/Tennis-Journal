@@ -1,11 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { SessionsList } from "@/components/SessionsList";
-import { StringsList } from "@/components/StringsList";
-import { StringOverview } from "@/components/StringOverview";
+import { SessionsList } from "@/components/sessions";
+import { StringsList, StringOverview } from "@/components/strings";
+import { Tabs } from "@/components/ui";
 
 type Tab = "sessions" | "strings" | "overview";
+
+const tabs = [
+  { id: "sessions", label: "Sessions", icon: "📅" },
+  { id: "strings", label: "My Strings", icon: "🧵" },
+  { id: "overview", label: "String Overview", icon: "📊" },
+];
+
+const tabColors: Record<Tab, "green" | "yellow" | "purple"> = {
+  sessions: "green",
+  strings: "yellow",
+  overview: "purple",
+};
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("sessions");
@@ -31,40 +43,12 @@ export default function Home() {
 
       {/* Tab Navigation */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
-            <button
-              onClick={() => setActiveTab("sessions")}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === "sessions"
-                  ? "border-green-600 text-green-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
-            >
-              📅 Sessions
-            </button>
-            <button
-              onClick={() => setActiveTab("strings")}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === "strings"
-                  ? "border-yellow-600 text-yellow-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
-            >
-              🧵 My Strings
-            </button>
-            <button
-              onClick={() => setActiveTab("overview")}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === "overview"
-                  ? "border-purple-600 text-purple-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
-            >
-              📊 String Overview
-            </button>
-          </nav>
-        </div>
+        <Tabs
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={(id) => setActiveTab(id as Tab)}
+          color={tabColors[activeTab]}
+        />
       </div>
 
       {/* Main Content */}
