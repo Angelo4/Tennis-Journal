@@ -86,7 +86,7 @@ export function SessionForm({ session, onClose }: SessionFormProps) {
             name="sessionDate"
             value={formData.sessionDate}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 focus:border-transparent"
             required
           />
         </div>
@@ -99,7 +99,7 @@ export function SessionForm({ session, onClose }: SessionFormProps) {
             name="type"
             value={formData.type}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
           >
             <option value={0}>Practice</option>
             <option value={1}>Match</option>
@@ -119,7 +119,7 @@ export function SessionForm({ session, onClose }: SessionFormProps) {
             value={formData.durationMinutes}
             onChange={handleChange}
             min={1}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 focus:border-transparent"
             required
           />
         </div>
@@ -132,7 +132,7 @@ export function SessionForm({ session, onClose }: SessionFormProps) {
             name="surface"
             value={formData.surface ?? 0}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
           >
             <option value={0}>Hard Court</option>
             <option value={1}>Clay</option>
@@ -152,7 +152,7 @@ export function SessionForm({ session, onClose }: SessionFormProps) {
             value={formData.location ?? ""}
             onChange={handleChange}
             placeholder="Tennis club, park, etc."
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent"
           />
         </div>
       </div>
@@ -170,10 +170,10 @@ export function SessionForm({ session, onClose }: SessionFormProps) {
             name="stringId"
             value={formData.stringId ?? ""}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
           >
             <option value="">No string selected</option>
-            {strings?.map((str) => (
+            {strings?.filter((str) => str.isActive !== false).map((str) => (
               <option key={str.id} value={str.id ?? ""}>
                 {str.brand} {str.model} ({str.gauge})
               </option>
@@ -193,7 +193,7 @@ export function SessionForm({ session, onClose }: SessionFormProps) {
             min={1}
             max={10}
             placeholder="How did the strings feel?"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent"
           />
         </div>
 
@@ -207,7 +207,7 @@ export function SessionForm({ session, onClose }: SessionFormProps) {
             onChange={handleChange}
             rows={2}
             placeholder="How did the strings perform? Tension, spin, control..."
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent"
           />
         </div>
       </div>
@@ -222,7 +222,7 @@ export function SessionForm({ session, onClose }: SessionFormProps) {
           onChange={handleChange}
           rows={3}
           placeholder="General notes about the session..."
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
       </div>
 

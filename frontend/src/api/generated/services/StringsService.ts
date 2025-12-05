@@ -11,13 +11,19 @@ import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class StringsService {
     /**
+     * @param isActive
      * @returns TennisString Success
      * @throws ApiError
      */
-    public static getApiStrings(): CancelablePromise<Array<TennisString>> {
+    public static getApiStrings(
+        isActive?: boolean,
+    ): CancelablePromise<Array<TennisString>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/Strings',
+            query: {
+                'isActive': isActive,
+            },
         });
     }
     /**
@@ -110,6 +116,44 @@ export class StringsService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/Strings/{id}/usage',
+            path: {
+                'id': id,
+            },
+            errors: {
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * @param id
+     * @returns TennisString Success
+     * @throws ApiError
+     */
+    public static postApiStringsRemove(
+        id: string,
+    ): CancelablePromise<TennisString> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/Strings/{id}/remove',
+            path: {
+                'id': id,
+            },
+            errors: {
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * @param id
+     * @returns TennisString Success
+     * @throws ApiError
+     */
+    public static postApiStringsRestore(
+        id: string,
+    ): CancelablePromise<TennisString> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/Strings/{id}/restore',
             path: {
                 'id': id,
             },

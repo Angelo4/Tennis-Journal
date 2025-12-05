@@ -139,3 +139,27 @@ export function useDeleteString() {
     },
   });
 }
+
+export function useRemoveString() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => StringsService.postApiStringsRemove(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.strings });
+      queryClient.invalidateQueries({ queryKey: queryKeys.string(id) });
+    },
+  });
+}
+
+export function useRestoreString() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => StringsService.postApiStringsRestore(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.strings });
+      queryClient.invalidateQueries({ queryKey: queryKeys.string(id) });
+    },
+  });
+}

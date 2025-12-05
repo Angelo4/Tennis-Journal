@@ -13,6 +13,8 @@ public class TennisString
     public int? MainTension { get; set; }
     public int? CrossTension { get; set; }
     public DateTime DateStrung { get; set; }
+    public DateTime? DateRemoved { get; set; }
+    public bool IsActive { get; set; } = true;
     public string? Notes { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

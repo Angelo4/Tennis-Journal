@@ -11,6 +11,8 @@ export type UpdateTennisStringRequest = {
     mainTension?: number | null;
     crossTension?: number | null;
     dateStrung?: string | null;
+    dateRemoved?: string | null;
+    isActive?: boolean | null;
     notes?: string | null;
 };
 

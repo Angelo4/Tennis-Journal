@@ -47,6 +47,7 @@ public class InMemoryDataService : IDataService
             MainTension = 52,
             CrossTension = 50,
             DateStrung = DateTime.UtcNow.AddDays(-14),
+            IsActive = true,
             Notes = "Great control and spin"
         };
 
@@ -59,8 +60,10 @@ public class InMemoryDataService : IDataService
             Type = StringType.Multifilament,
             MainTension = 55,
             CrossTension = 55,
-            DateStrung = DateTime.UtcNow.AddDays(-7),
-            Notes = "Comfortable for arm"
+            DateStrung = DateTime.UtcNow.AddDays(-60),
+            DateRemoved = DateTime.UtcNow.AddDays(-7),
+            IsActive = false,
+            Notes = "Comfortable for arm - removed after 53 days"
         };
 
         _strings[string1.Id] = string1;

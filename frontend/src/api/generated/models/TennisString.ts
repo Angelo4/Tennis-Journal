@@ -12,6 +12,8 @@ export type TennisString = {
     mainTension?: number | null;
     crossTension?: number | null;
     dateStrung?: string;
+    dateRemoved?: string | null;
+    isActive?: boolean;
     notes?: string | null;
     createdAt?: string;
     updatedAt?: string;

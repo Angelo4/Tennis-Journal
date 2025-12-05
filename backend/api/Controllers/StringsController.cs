@@ -20,11 +20,18 @@ public class StringsController : ControllerBase
     /// <summary>
     /// Get all tennis strings
     /// </summary>
+    /// <param name="isActive">Filter by active status. If null, returns all strings.</param>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<TennisString>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<TennisString>>> GetAll()
+    public async Task<ActionResult<IEnumerable<TennisString>>> GetAll([FromQuery] bool? isActive = null)
     {
         var strings = await _dataService.GetAllStringsAsync();
+        
+        if (isActive.HasValue)
+        {
+            strings = strings.Where(s => s.IsActive == isActive.Value);
+        }
+        
         return Ok(strings);
     }
 
@@ -92,6 +99,7 @@ public class StringsController : ControllerBase
             MainTension = request.MainTension,
             CrossTension = request.CrossTension,
             DateStrung = request.DateStrung,
+            IsActive = request.IsActive,
             Notes = request.Notes
         };
 
@@ -118,6 +126,8 @@ public class StringsController : ControllerBase
         existing.MainTension = request.MainTension ?? existing.MainTension;
         existing.CrossTension = request.CrossTension ?? existing.CrossTension;
         existing.DateStrung = request.DateStrung ?? existing.DateStrung;
+        existing.DateRemoved = request.DateRemoved ?? existing.DateRemoved;
+        existing.IsActive = request.IsActive ?? existing.IsActive;
         existing.Notes = request.Notes ?? existing.Notes;
 
         var updated = await _dataService.UpdateStringAsync(id, existing);
@@ -137,5 +147,43 @@ public class StringsController : ControllerBase
             return NotFound();
         
         return NoContent();
+    }
+
+    /// <summary>
+    /// Mark a string as removed (no longer on racquet)
+    /// </summary>
+    [HttpPost("{id}/remove")]
+    [ProducesResponseType(typeof(TennisString), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<TennisString>> Remove(string id)
+    {
+        var existing = await _dataService.GetStringByIdAsync(id);
+        if (existing == null)
+            return NotFound();
+
+        existing.IsActive = false;
+        existing.DateRemoved = DateTime.UtcNow;
+
+        var updated = await _dataService.UpdateStringAsync(id, existing);
+        return Ok(updated);
+    }
+
+    /// <summary>
+    /// Restore a removed string (mark as active again)
+    /// </summary>
+    [HttpPost("{id}/restore")]
+    [ProducesResponseType(typeof(TennisString), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<TennisString>> Restore(string id)
+    {
+        var existing = await _dataService.GetStringByIdAsync(id);
+        if (existing == null)
+            return NotFound();
+
+        existing.IsActive = true;
+        existing.DateRemoved = null;
+
+        var updated = await _dataService.UpdateStringAsync(id, existing);
+        return Ok(updated);
     }
 }

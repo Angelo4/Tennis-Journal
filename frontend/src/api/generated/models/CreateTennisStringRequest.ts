@@ -11,6 +11,7 @@ export type CreateTennisStringRequest = {
     mainTension?: number | null;
     crossTension?: number | null;
     dateStrung?: string;
+    isActive?: boolean;
     notes?: string | null;
 };
 

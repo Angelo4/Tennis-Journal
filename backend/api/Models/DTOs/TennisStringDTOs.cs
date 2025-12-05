@@ -9,6 +9,7 @@ public class CreateTennisStringRequest
     public int? MainTension { get; set; }
     public int? CrossTension { get; set; }
     public DateTime DateStrung { get; set; }
+    public bool IsActive { get; set; } = true;
     public string? Notes { get; set; }
 }
 
@@ -21,5 +22,7 @@ public class UpdateTennisStringRequest
     public int? MainTension { get; set; }
     public int? CrossTension { get; set; }
     public DateTime? DateStrung { get; set; }
+    public DateTime? DateRemoved { get; set; }
+    public bool? IsActive { get; set; }
     public string? Notes { get; set; }
 }

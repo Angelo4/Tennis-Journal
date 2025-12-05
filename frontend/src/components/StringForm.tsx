@@ -82,7 +82,7 @@ export function StringForm({ string, onClose }: StringFormProps) {
             value={formData.brand ?? ""}
             onChange={handleChange}
             placeholder="e.g., Luxilon, Wilson, Babolat"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
             required
           />
         </div>
@@ -97,7 +97,7 @@ export function StringForm({ string, onClose }: StringFormProps) {
             value={formData.model ?? ""}
             onChange={handleChange}
             placeholder="e.g., ALU Power, NXT, RPM Blast"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
             required
           />
         </div>
@@ -112,7 +112,7 @@ export function StringForm({ string, onClose }: StringFormProps) {
             value={formData.gauge ?? ""}
             onChange={handleChange}
             placeholder="e.g., 16, 16L, 17"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
           />
         </div>
 
@@ -124,7 +124,7 @@ export function StringForm({ string, onClose }: StringFormProps) {
             name="type"
             value={formData.type}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
           >
             <option value={0}>Polyester</option>
             <option value={1}>Multifilament</option>
@@ -146,7 +146,7 @@ export function StringForm({ string, onClose }: StringFormProps) {
             min={30}
             max={70}
             placeholder="e.g., 52"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
           />
         </div>
 
@@ -162,7 +162,7 @@ export function StringForm({ string, onClose }: StringFormProps) {
             min={30}
             max={70}
             placeholder="e.g., 50"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
           />
         </div>
 
@@ -175,7 +175,7 @@ export function StringForm({ string, onClose }: StringFormProps) {
             name="dateStrung"
             value={formData.dateStrung}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
           />
         </div>
       </div>
@@ -190,7 +190,7 @@ export function StringForm({ string, onClose }: StringFormProps) {
           onChange={handleChange}
           rows={3}
           placeholder="Initial impressions, why you chose this string, etc."
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
         />
       </div>
 
