@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { SessionsList } from "@/components/SessionsList";
 import { StringsList } from "@/components/StringsList";
+import { StringOverview } from "@/components/StringOverview";
 
-type Tab = "sessions" | "strings";
+type Tab = "sessions" | "strings" | "overview";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("sessions");
@@ -52,13 +53,25 @@ export default function Home() {
             >
               🧵 My Strings
             </button>
+            <button
+              onClick={() => setActiveTab("overview")}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === "overview"
+                  ? "border-purple-600 text-purple-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              📊 String Overview
+            </button>
           </nav>
         </div>
       </div>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === "sessions" ? <SessionsList /> : <StringsList />}
+        {activeTab === "sessions" && <SessionsList />}
+        {activeTab === "strings" && <StringsList />}
+        {activeTab === "overview" && <StringOverview />}
       </main>
     </div>
   );
