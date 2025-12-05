@@ -1,6 +1,4 @@
-// Re-export all hooks from separate files for backwards compatibility
-// New code should import from '@/hooks' or specific files
-
+// Session hooks
 export {
   useSessions,
   useSession,
@@ -11,6 +9,7 @@ export {
   sessionKeys,
 } from './useSessions';
 
+// String hooks
 export {
   useStrings,
   useString,
@@ -23,7 +22,7 @@ export {
   stringKeys,
 } from './useStrings';
 
-// Legacy query keys export
+// Legacy export for backwards compatibility
 export const queryKeys = {
   sessions: ['sessions'] as const,
   session: (id: string) => ['sessions', id] as const,
@@ -32,4 +31,3 @@ export const queryKeys = {
   string: (id: string) => ['strings', id] as const,
   stringUsage: (id: string) => ['strings', id, 'usage'] as const,
 };
-
