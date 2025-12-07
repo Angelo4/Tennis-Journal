@@ -236,6 +236,10 @@ module frontendContainerApp 'br/public:avm/res/app/container-app:0.14.0' = {
             value: '0.0.0.0'
           }
           {
+            name: 'AUTH_TRUST_HOST'
+            value: 'true'
+          }
+          {
             name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
             value: appInsights.outputs.connectionString
           }

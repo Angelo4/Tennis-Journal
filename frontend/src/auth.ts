@@ -10,6 +10,8 @@ interface ExtendedUser extends User {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  // Trust the host in containerized/proxy environments
+  trustHost: true,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
