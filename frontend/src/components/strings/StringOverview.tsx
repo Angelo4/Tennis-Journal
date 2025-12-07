@@ -26,7 +26,7 @@ import {
 
 import { useSessions } from "@/hooks/useSessions";
 import { useStrings } from "@/hooks/useStrings";
-import type { TennisString, TennisSession } from "@/api";
+import type { TennisString } from "@/api";
 import { Tabs, StatCard, LoadingContainer } from "@/components/ui";
 import { ChartContainer } from "@/components/charts";
 import { STRING_TYPE_LABELS, CHART_COLORS } from "@/utils/constants";

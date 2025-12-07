@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
-/* eslint-disable */
+ 
 import type { CreateTennisSessionRequest } from '../models/CreateTennisSessionRequest';
 import type { TennisSession } from '../models/TennisSession';
 import type { TennisSessionWithString } from '../models/TennisSessionWithString';

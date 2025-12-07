@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { SessionsList } from "@/components/sessions";
 import { StringsList, StringOverview } from "@/components/strings";
@@ -24,9 +25,17 @@ const tabColors: Record<Tab, "green" | "yellow" | "purple"> = {
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("sessions");
   const { user, isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isLoading, isAuthenticated, router]);
 
   // Show loading state
-  if (isLoading) {
+  if (isLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -35,14 +44,6 @@ export default function Home() {
         </div>
       </div>
     );
-  }
-
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    if (typeof window !== "undefined") {
-      window.location.href = "/login";
-    }
-    return null;
   }
 
   return (
@@ -67,6 +68,7 @@ export default function Home() {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 {user?.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={user.image}
                     alt={user.name || "User"}

@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
-/* eslint-disable */
+ 
 import type { CreateTennisStringRequest } from '../models/CreateTennisStringRequest';
 import type { StringUsageStats } from '../models/StringUsageStats';
 import type { TennisString } from '../models/TennisString';

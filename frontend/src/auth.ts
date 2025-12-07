@@ -1,8 +1,13 @@
-import NextAuth from "next-auth";
+import NextAuth, { User } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5163";
+
+interface ExtendedUser extends User {
+  accessToken?: string;
+  expiresAt?: string;
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -69,9 +74,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const data = await response.json();
           
           // Attach our backend token to the user object
-          (user as any).accessToken = data.token;
-          (user as any).expiresAt = data.expiresAt;
-          (user as any).id = data.user.id;
+          (user as ExtendedUser).accessToken = data.token;
+          (user as ExtendedUser).expiresAt = data.expiresAt;
+          (user as ExtendedUser).id = data.user.id;
           
           return true;
         } catch {
@@ -81,11 +86,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       
       return true;
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
       // Initial sign in
       if (user) {
-        token.accessToken = (user as any).accessToken;
-        token.expiresAt = (user as any).expiresAt;
+        token.accessToken = (user as ExtendedUser).accessToken;
+        token.expiresAt = (user as ExtendedUser).expiresAt;
         token.userId = user.id;
       }
       
