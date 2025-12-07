@@ -30,8 +30,8 @@ permissions:
   contents: read
 
 env:
-  AZURE_RESOURCE_GROUP: rg-tennis-journal-${{ github.event.inputs.environment || 'dev' }}
-  AZURE_LOCATION: eastus
+  AZURE_RESOURCE_GROUP: rg-tennisjournal-${{ github.event.inputs.environment || 'dev' }}
+  AZURE_LOCATION: australiaeast
 
 jobs:
   validate:
@@ -95,9 +95,11 @@ jobs:
     environment: ${{ github.event.inputs.environment || 'dev' }}
     
     outputs:
-      apiAppName: ${{ steps.deploy.outputs.apiAppName }}
-      frontendAppName: ${{ steps.deploy.outputs.frontendAppName }}
-      containerRegistryName: ${{ steps.deploy.outputs.containerRegistryName }}
+      webAppName: ${{ steps.deploy.outputs.webAppName }}
+      webAppHostname: ${{ steps.deploy.outputs.webAppHostname }}
+      staticWebAppName: ${{ steps.deploy.outputs.staticWebAppName }}
+      staticWebAppHostname: ${{ steps.deploy.outputs.staticWebAppHostname }}
+      appInsightsConnectionString: ${{ steps.deploy.outputs.appInsightsConnectionString }}
     
     steps:
       - name: Checkout code
@@ -135,6 +137,7 @@ jobs:
           echo "| Resource | Value |" >> $GITHUB_STEP_SUMMARY
           echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
           echo "| Resource Group | ${{ env.AZURE_RESOURCE_GROUP }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| API App | ${{ steps.deploy.outputs.apiAppName }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Frontend App | ${{ steps.deploy.outputs.frontendAppName }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Container Registry | ${{ steps.deploy.outputs.containerRegistryName }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Web App Name | ${{ steps.deploy.outputs.webAppName }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Web App URL | https://${{ steps.deploy.outputs.webAppHostname }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Static Web App Name | ${{ steps.deploy.outputs.staticWebAppName }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Static Web App URL | https://${{ steps.deploy.outputs.staticWebAppHostname }} |" >> $GITHUB_STEP_SUMMARY

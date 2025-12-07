@@ -45,7 +45,7 @@ permissions:
 env:
   DOTNET_VERSION: '9.0.x'
   NODE_VERSION: '20.x'
-  AZURE_RESOURCE_GROUP: rg-tennis-journal-${{ github.event.inputs.environment || 'dev' }}
+  AZURE_RESOURCE_GROUP: rg-tennisjournal-${{ github.event.inputs.environment || 'dev' }}
 
 jobs:
   # ============================================
