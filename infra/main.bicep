@@ -162,12 +162,14 @@ module frontendWebApp 'br/public:avm/res/web/site:0.15.1' = {
       http20Enabled: true
       minTlsVersion: '1.2'
       ftpsState: 'Disabled'
+      appCommandLine: 'node server.js' // Required for Next.js standalone deployment
     }
     appSettingsKeyValuePairs: {
       APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
-      WEBSITE_RUN_FROM_PACKAGE: '1'
       NODE_ENV: environmentName == 'prod' ? 'production' : 'development'
       NEXT_PUBLIC_API_URL: 'https://app-${resourcePrefix}-api-${uniqueSuffix}.azurewebsites.net'
+      PORT: '8080' // Azure App Service expects port 8080
+      HOSTNAME: '0.0.0.0'
     }
     httpsOnly: true
     publicNetworkAccess: 'Enabled'
