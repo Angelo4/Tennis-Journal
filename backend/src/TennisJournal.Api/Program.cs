@@ -1,11 +1,19 @@
+using System.Text.Json.Serialization;
 using Microsoft.OpenApi.Models;
+using TennisJournal.Api.Converters;
 using TennisJournal.Application;
 using TennisJournal.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Allow enums to be deserialized from integers, string integers, or enum names
+        options.JsonSerializerOptions.Converters.Add(new FlexibleEnumConverterFactory());
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 
 // Add Application and Infrastructure layers
 builder.Services.AddApplication();
