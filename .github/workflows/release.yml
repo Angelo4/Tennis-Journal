@@ -228,19 +228,26 @@ jobs:
         run: |
           IMAGE="${{ steps.get-app-details.outputs.acr_login_server }}/tennis-journal-frontend:${{ needs.frontend-build.outputs.image_version }}"
           ACR_SERVER="${{ steps.get-app-details.outputs.acr_login_server }}"
+          CA_NAME="${{ steps.get-app-details.outputs.container_app_name }}"
+          RG="${{ env.AZURE_RESOURCE_GROUP }}"
           
-          # Update the container app with the new image and configure ACR registry with managed identity
+          # Configure ACR registry with managed identity (if not already configured)
+          az containerapp registry set \
+            --name "$CA_NAME" \
+            --resource-group "$RG" \
+            --server "$ACR_SERVER" \
+            --identity system
+          
+          # Update the container app with the new image
           az containerapp update \
-            --name ${{ steps.get-app-details.outputs.container_app_name }} \
-            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --image "$IMAGE" \
-            --registry-server "$ACR_SERVER" \
-            --registry-identity system
+            --name "$CA_NAME" \
+            --resource-group "$RG" \
+            --image "$IMAGE"
           
           # Ensure ingress is configured for port 3000 (Next.js)
           az containerapp ingress update \
-            --name ${{ steps.get-app-details.outputs.container_app_name }} \
-            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --name "$CA_NAME" \
+            --resource-group "$RG" \
             --target-port 3000
 
       - name: Get Container App URL
