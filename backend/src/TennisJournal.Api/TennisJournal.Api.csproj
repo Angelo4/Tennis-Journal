@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>TennisJournal.Api</RootNamespace>
+    <UserSecretsId>ed78f46e-02d2-4c88-a0a4-685a00af9ee0</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
