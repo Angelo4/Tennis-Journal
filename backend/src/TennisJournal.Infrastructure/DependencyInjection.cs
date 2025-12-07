@@ -1,3 +1,4 @@
+using Azure.Identity;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,6 +26,12 @@ public static class DependencyInjection
                     PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
                 }
             };
+            
+            // Use managed identity in Azure, or key for local development
+            if (cosmosDbSettings.UseManagedIdentity)
+            {
+                return new CosmosClient(cosmosDbSettings.Endpoint, new DefaultAzureCredential(), cosmosClientOptions);
+            }
             
             return new CosmosClient(cosmosDbSettings.Endpoint, cosmosDbSettings.Key, cosmosClientOptions);
         });
