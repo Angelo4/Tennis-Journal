@@ -124,9 +124,17 @@ jobs:
 
       - name: Create deployment package
         run: |
+          # Copy standalone build output
+          mkdir -p ./deploy
           cp -r .next/standalone/. ./deploy/
+          # Copy static files into the standalone .next directory
           cp -r .next/static ./deploy/.next/static
+          # Copy public folder if it exists
           cp -r public ./deploy/public 2>/dev/null || true
+          # Debug: List the deployment structure
+          echo "=== Deployment structure ==="
+          ls -la ./deploy/
+          ls -la ./deploy/.next/ 2>/dev/null || echo "No .next directory"
 
       - name: Upload frontend artifact
         uses: actions/upload-artifact@v4
