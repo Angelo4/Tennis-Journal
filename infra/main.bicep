@@ -198,6 +198,7 @@ module containerAppsEnvironment 'br/public:avm/res/app/managed-environment:0.10.
     tags: defaultTags
     logAnalyticsWorkspaceResourceId: logAnalytics.outputs.resourceId
     zoneRedundant: environmentName == 'prod'
+    publicNetworkAccess: 'Enabled'
   }
 }
 
@@ -261,25 +262,27 @@ module frontendContainerApp 'br/public:avm/res/app/container-app:0.14.0' = {
         }
       ]
     }
-    // Registry configuration for pulling images
-    registries: [
-      {
-        server: containerRegistry.outputs.loginServer
-        identity: 'system'
-      }
-    ]
+    // Note: Registry configuration is added via az containerapp update after role assignment
+    // This avoids circular dependency issues during initial deployment
   }
 }
 
+// Reference the Container Registry for role assignment scope
+// Using the known name (from variables) allows Bicep to resolve this at deployment start
+resource containerRegistryRef 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
+  name: containerRegistryName
+}
+
 // Role assignment for Container App to pull images from ACR
-module acrPullRoleAssignment 'br/public:avm/ptn/authorization/resource-role-assignment:0.1.1' = {
-  name: 'acrPullRoleAssignmentDeployment'
-  params: {
-    principalId: frontendContainerApp.outputs.systemAssignedMIPrincipalId!
-    resourceId: containerRegistry.outputs.resourceId
+resource acrPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, containerRegistryName, 'ca-${resourcePrefix}-web', 'AcrPull')
+  scope: containerRegistryRef
+  properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d') // AcrPull
+    principalId: frontendContainerApp.outputs.systemAssignedMIPrincipalId!
     principalType: 'ServicePrincipal'
   }
+  dependsOn: [containerRegistry]
 }
 
 // Azure Cosmos DB - NoSQL database for storing Users, Sessions, and Strings
