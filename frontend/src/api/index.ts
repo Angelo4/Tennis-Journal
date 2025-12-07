@@ -12,5 +12,16 @@ export const apiClient = axios.create({
   },
 });
 
+// Function to set the auth token for API calls
+export function setAuthToken(token: string | null) {
+  if (token) {
+    apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    OpenAPI.TOKEN = token;
+  } else {
+    delete apiClient.defaults.headers.common['Authorization'];
+    OpenAPI.TOKEN = undefined;
+  }
+}
+
 // Export all generated services and models
 export * from './generated';

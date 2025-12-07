@@ -7,13 +7,13 @@ namespace TennisJournal.Application.Services;
 
 public interface ISessionService
 {
-    Task<IEnumerable<SessionResponse>> GetAllAsync();
-    Task<SessionResponse?> GetByIdAsync(string id);
-    Task<SessionWithStringResponse?> GetWithStringAsync(string id);
-    Task<SessionResponse> CreateAsync(CreateSessionRequest request);
-    Task<SessionResponse?> UpdateAsync(string id, UpdateSessionRequest request);
-    Task<bool> DeleteAsync(string id);
-    Task<bool> StringExistsAsync(string stringId);
+    Task<IEnumerable<SessionResponse>> GetAllAsync(string userId);
+    Task<SessionResponse?> GetByIdAsync(string id, string userId);
+    Task<SessionWithStringResponse?> GetWithStringAsync(string id, string userId);
+    Task<SessionResponse> CreateAsync(CreateSessionRequest request, string userId);
+    Task<SessionResponse?> UpdateAsync(string id, UpdateSessionRequest request, string userId);
+    Task<bool> DeleteAsync(string id, string userId);
+    Task<bool> StringExistsAsync(string stringId, string userId);
 }
 
 public class SessionService : ISessionService
@@ -27,28 +27,28 @@ public class SessionService : ISessionService
         _stringRepository = stringRepository;
     }
 
-    public async Task<IEnumerable<SessionResponse>> GetAllAsync()
+    public async Task<IEnumerable<SessionResponse>> GetAllAsync(string userId)
     {
-        var sessions = await _sessionRepository.GetAllAsync();
+        var sessions = await _sessionRepository.GetAllAsync(userId);
         return sessions.Select(MapToResponse);
     }
 
-    public async Task<SessionResponse?> GetByIdAsync(string id)
+    public async Task<SessionResponse?> GetByIdAsync(string id, string userId)
     {
-        var session = await _sessionRepository.GetByIdAsync(id);
+        var session = await _sessionRepository.GetByIdAsync(id, userId);
         return session != null ? MapToResponse(session) : null;
     }
 
-    public async Task<SessionWithStringResponse?> GetWithStringAsync(string id)
+    public async Task<SessionWithStringResponse?> GetWithStringAsync(string id, string userId)
     {
-        var session = await _sessionRepository.GetByIdAsync(id);
+        var session = await _sessionRepository.GetByIdAsync(id, userId);
         if (session == null)
             return null;
 
         StringResponse? stringResponse = null;
         if (!string.IsNullOrEmpty(session.StringId))
         {
-            var tennisString = await _stringRepository.GetByIdAsync(session.StringId);
+            var tennisString = await _stringRepository.GetByIdAsync(session.StringId, userId);
             if (tennisString != null)
             {
                 stringResponse = MapStringToResponse(tennisString);
@@ -61,10 +61,11 @@ public class SessionService : ISessionService
         );
     }
 
-    public async Task<SessionResponse> CreateAsync(CreateSessionRequest request)
+    public async Task<SessionResponse> CreateAsync(CreateSessionRequest request, string userId)
     {
         var session = new TennisSession
         {
+            UserId = userId,
             SessionDate = request.SessionDate,
             Type = request.Type,
             DurationMinutes = request.DurationMinutes,
@@ -80,9 +81,9 @@ public class SessionService : ISessionService
         return MapToResponse(created);
     }
 
-    public async Task<SessionResponse?> UpdateAsync(string id, UpdateSessionRequest request)
+    public async Task<SessionResponse?> UpdateAsync(string id, UpdateSessionRequest request, string userId)
     {
-        var existing = await _sessionRepository.GetByIdAsync(id);
+        var existing = await _sessionRepository.GetByIdAsync(id, userId);
         if (existing == null)
             return null;
 
@@ -101,14 +102,14 @@ public class SessionService : ISessionService
         return updated != null ? MapToResponse(updated) : null;
     }
 
-    public async Task<bool> DeleteAsync(string id)
+    public async Task<bool> DeleteAsync(string id, string userId)
     {
-        return await _sessionRepository.DeleteAsync(id);
+        return await _sessionRepository.DeleteAsync(id, userId);
     }
 
-    public async Task<bool> StringExistsAsync(string stringId)
+    public async Task<bool> StringExistsAsync(string stringId, string userId)
     {
-        var tennisString = await _stringRepository.GetByIdAsync(stringId);
+        var tennisString = await _stringRepository.GetByIdAsync(stringId, userId);
         return tennisString != null;
     }
 

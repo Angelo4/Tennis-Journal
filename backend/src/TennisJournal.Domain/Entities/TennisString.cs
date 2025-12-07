@@ -8,6 +8,12 @@ namespace TennisJournal.Domain.Entities;
 public class TennisString
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
+    
+    /// <summary>
+    /// The ID of the user who owns this string
+    /// </summary>
+    public string UserId { get; set; } = string.Empty;
+    
     public string Brand { get; set; } = string.Empty;
     public string Model { get; set; } = string.Empty;
     public string? Gauge { get; set; }

@@ -15,10 +15,12 @@ public class CosmosSessionRepository : ISessionRepository
         _container = database.GetContainer(settings.Value.SessionsContainerName);
     }
 
-    public async Task<IEnumerable<TennisSession>> GetAllAsync()
+    public async Task<IEnumerable<TennisSession>> GetAllAsync(string userId)
     {
         var query = _container.GetItemQueryIterator<TennisSession>(
-            new QueryDefinition("SELECT * FROM c ORDER BY c.sessionDate DESC"));
+            new QueryDefinition("SELECT * FROM c WHERE c.userId = @userId ORDER BY c.sessionDate DESC")
+                .WithParameter("@userId", userId),
+            requestOptions: new QueryRequestOptions { PartitionKey = new PartitionKey(userId) });
         
         var results = new List<TennisSession>();
 
@@ -31,11 +33,11 @@ public class CosmosSessionRepository : ISessionRepository
         return results;
     }
 
-    public async Task<TennisSession?> GetByIdAsync(string id)
+    public async Task<TennisSession?> GetByIdAsync(string id, string userId)
     {
         try
         {
-            var response = await _container.ReadItemAsync<TennisSession>(id, new PartitionKey(id));
+            var response = await _container.ReadItemAsync<TennisSession>(id, new PartitionKey(userId));
             return response.Resource;
         }
         catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -44,11 +46,13 @@ public class CosmosSessionRepository : ISessionRepository
         }
     }
 
-    public async Task<IEnumerable<TennisSession>> GetByStringIdAsync(string stringId)
+    public async Task<IEnumerable<TennisSession>> GetByStringIdAsync(string stringId, string userId)
     {
         var query = _container.GetItemQueryIterator<TennisSession>(
-            new QueryDefinition("SELECT * FROM c WHERE c.stringId = @stringId ORDER BY c.sessionDate DESC")
-                .WithParameter("@stringId", stringId));
+            new QueryDefinition("SELECT * FROM c WHERE c.userId = @userId AND c.stringId = @stringId ORDER BY c.sessionDate DESC")
+                .WithParameter("@userId", userId)
+                .WithParameter("@stringId", stringId),
+            requestOptions: new QueryRequestOptions { PartitionKey = new PartitionKey(userId) });
         
         var results = new List<TennisSession>();
 
@@ -67,7 +71,7 @@ public class CosmosSessionRepository : ISessionRepository
         session.CreatedAt = DateTime.UtcNow;
         session.UpdatedAt = DateTime.UtcNow;
 
-        var response = await _container.CreateItemAsync(session, new PartitionKey(session.Id));
+        var response = await _container.CreateItemAsync(session, new PartitionKey(session.UserId));
         return response.Resource;
     }
 
@@ -76,7 +80,7 @@ public class CosmosSessionRepository : ISessionRepository
         try
         {
             session.UpdatedAt = DateTime.UtcNow;
-            var response = await _container.ReplaceItemAsync(session, session.Id, new PartitionKey(session.Id));
+            var response = await _container.ReplaceItemAsync(session, session.Id, new PartitionKey(session.UserId));
             return response.Resource;
         }
         catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -85,11 +89,11 @@ public class CosmosSessionRepository : ISessionRepository
         }
     }
 
-    public async Task<bool> DeleteAsync(string id)
+    public async Task<bool> DeleteAsync(string id, string userId)
     {
         try
         {
-            await _container.DeleteItemAsync<TennisSession>(id, new PartitionKey(id));
+            await _container.DeleteItemAsync<TennisSession>(id, new PartitionKey(userId));
             return true;
         }
         catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)

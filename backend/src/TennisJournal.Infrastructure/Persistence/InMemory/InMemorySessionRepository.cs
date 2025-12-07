@@ -31,6 +31,7 @@ public class InMemorySessionRepository : ISessionRepository
         var session1 = new TennisSession
         {
             Id = "session-1",
+            UserId = "demo-user",
             SessionDate = DateTime.UtcNow.AddDays(-2),
             Type = SessionType.Practice,
             DurationMinutes = 90,
@@ -45,6 +46,7 @@ public class InMemorySessionRepository : ISessionRepository
         var session2 = new TennisSession
         {
             Id = "session-2",
+            UserId = "demo-user",
             SessionDate = DateTime.UtcNow.AddDays(-1),
             Type = SessionType.Match,
             DurationMinutes = 120,
@@ -60,15 +62,20 @@ public class InMemorySessionRepository : ISessionRepository
         _sessions[session2.Id] = session2;
     }
 
-    public Task<IEnumerable<TennisSession>> GetAllAsync()
+    public Task<IEnumerable<TennisSession>> GetAllAsync(string userId)
     {
-        return Task.FromResult(_sessions.Values.OrderByDescending(s => s.SessionDate).AsEnumerable());
+        return Task.FromResult(_sessions.Values
+            .Where(s => s.UserId == userId)
+            .OrderByDescending(s => s.SessionDate)
+            .AsEnumerable());
     }
 
-    public Task<TennisSession?> GetByIdAsync(string id)
+    public Task<TennisSession?> GetByIdAsync(string id, string userId)
     {
         _sessions.TryGetValue(id, out var session);
-        return Task.FromResult(session);
+        if (session?.UserId != userId)
+            return Task.FromResult<TennisSession?>(null);
+        return Task.FromResult<TennisSession?>(session);
     }
 
     public Task<TennisSession> CreateAsync(TennisSession session)
@@ -90,14 +97,18 @@ public class InMemorySessionRepository : ISessionRepository
         return Task.FromResult<TennisSession?>(session);
     }
 
-    public Task<bool> DeleteAsync(string id)
+    public Task<bool> DeleteAsync(string id, string userId)
     {
-        return Task.FromResult(_sessions.Remove(id));
+        if (_sessions.TryGetValue(id, out var session) && session.UserId == userId)
+        {
+            return Task.FromResult(_sessions.Remove(id));
+        }
+        return Task.FromResult(false);
     }
 
-    public Task<IEnumerable<TennisSession>> GetByStringIdAsync(string stringId)
+    public Task<IEnumerable<TennisSession>> GetByStringIdAsync(string stringId, string userId)
     {
-        var sessions = _sessions.Values.Where(s => s.StringId == stringId);
+        var sessions = _sessions.Values.Where(s => s.StringId == stringId && s.UserId == userId);
         return Task.FromResult(sessions);
     }
 }

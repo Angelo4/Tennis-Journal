@@ -6,14 +6,14 @@ namespace TennisJournal.Application.Services;
 
 public interface IStringService
 {
-    Task<IEnumerable<StringResponse>> GetAllAsync(bool? isActive = null);
-    Task<StringResponse?> GetByIdAsync(string id);
-    Task<StringResponse> CreateAsync(CreateStringRequest request);
-    Task<StringResponse?> UpdateAsync(string id, UpdateStringRequest request);
-    Task<bool> DeleteAsync(string id);
-    Task<StringResponse?> RemoveAsync(string id);
-    Task<StringResponse?> RestoreAsync(string id);
-    Task<StringUsageStatsResponse?> GetUsageStatsAsync(string id);
+    Task<IEnumerable<StringResponse>> GetAllAsync(string userId, bool? isActive = null);
+    Task<StringResponse?> GetByIdAsync(string id, string userId);
+    Task<StringResponse> CreateAsync(CreateStringRequest request, string userId);
+    Task<StringResponse?> UpdateAsync(string id, UpdateStringRequest request, string userId);
+    Task<bool> DeleteAsync(string id, string userId);
+    Task<StringResponse?> RemoveAsync(string id, string userId);
+    Task<StringResponse?> RestoreAsync(string id, string userId);
+    Task<StringUsageStatsResponse?> GetUsageStatsAsync(string id, string userId);
 }
 
 public class StringService : IStringService
@@ -27,22 +27,23 @@ public class StringService : IStringService
         _sessionRepository = sessionRepository;
     }
 
-    public async Task<IEnumerable<StringResponse>> GetAllAsync(bool? isActive = null)
+    public async Task<IEnumerable<StringResponse>> GetAllAsync(string userId, bool? isActive = null)
     {
-        var strings = await _stringRepository.GetAllAsync(isActive);
+        var strings = await _stringRepository.GetAllAsync(userId, isActive);
         return strings.Select(MapToResponse);
     }
 
-    public async Task<StringResponse?> GetByIdAsync(string id)
+    public async Task<StringResponse?> GetByIdAsync(string id, string userId)
     {
-        var tennisString = await _stringRepository.GetByIdAsync(id);
+        var tennisString = await _stringRepository.GetByIdAsync(id, userId);
         return tennisString != null ? MapToResponse(tennisString) : null;
     }
 
-    public async Task<StringResponse> CreateAsync(CreateStringRequest request)
+    public async Task<StringResponse> CreateAsync(CreateStringRequest request, string userId)
     {
         var tennisString = new TennisString
         {
+            UserId = userId,
             Brand = request.Brand,
             Model = request.Model,
             Gauge = request.Gauge,
@@ -58,9 +59,9 @@ public class StringService : IStringService
         return MapToResponse(created);
     }
 
-    public async Task<StringResponse?> UpdateAsync(string id, UpdateStringRequest request)
+    public async Task<StringResponse?> UpdateAsync(string id, UpdateStringRequest request, string userId)
     {
-        var existing = await _stringRepository.GetByIdAsync(id);
+        var existing = await _stringRepository.GetByIdAsync(id, userId);
         if (existing == null)
             return null;
 
@@ -80,14 +81,14 @@ public class StringService : IStringService
         return updated != null ? MapToResponse(updated) : null;
     }
 
-    public async Task<bool> DeleteAsync(string id)
+    public async Task<bool> DeleteAsync(string id, string userId)
     {
-        return await _stringRepository.DeleteAsync(id);
+        return await _stringRepository.DeleteAsync(id, userId);
     }
 
-    public async Task<StringResponse?> RemoveAsync(string id)
+    public async Task<StringResponse?> RemoveAsync(string id, string userId)
     {
-        var existing = await _stringRepository.GetByIdAsync(id);
+        var existing = await _stringRepository.GetByIdAsync(id, userId);
         if (existing == null)
             return null;
 
@@ -96,9 +97,9 @@ public class StringService : IStringService
         return updated != null ? MapToResponse(updated) : null;
     }
 
-    public async Task<StringResponse?> RestoreAsync(string id)
+    public async Task<StringResponse?> RestoreAsync(string id, string userId)
     {
-        var existing = await _stringRepository.GetByIdAsync(id);
+        var existing = await _stringRepository.GetByIdAsync(id, userId);
         if (existing == null)
             return null;
 
@@ -107,13 +108,13 @@ public class StringService : IStringService
         return updated != null ? MapToResponse(updated) : null;
     }
 
-    public async Task<StringUsageStatsResponse?> GetUsageStatsAsync(string id)
+    public async Task<StringUsageStatsResponse?> GetUsageStatsAsync(string id, string userId)
     {
-        var tennisString = await _stringRepository.GetByIdAsync(id);
+        var tennisString = await _stringRepository.GetByIdAsync(id, userId);
         if (tennisString == null)
             return null;
 
-        var sessions = await _sessionRepository.GetByStringIdAsync(id);
+        var sessions = await _sessionRepository.GetByStringIdAsync(id, userId);
         var sessionList = sessions.ToList();
 
         return new StringUsageStatsResponse(

@@ -7,9 +7,9 @@ namespace TennisJournal.Application.Interfaces;
 /// </summary>
 public interface IStringRepository
 {
-    Task<IEnumerable<TennisString>> GetAllAsync(bool? isActive = null);
-    Task<TennisString?> GetByIdAsync(string id);
+    Task<IEnumerable<TennisString>> GetAllAsync(string userId, bool? isActive = null);
+    Task<TennisString?> GetByIdAsync(string id, string userId);
     Task<TennisString> CreateAsync(TennisString tennisString);
     Task<TennisString?> UpdateAsync(TennisString tennisString);
-    Task<bool> DeleteAsync(string id);
+    Task<bool> DeleteAsync(string id, string userId);
 }

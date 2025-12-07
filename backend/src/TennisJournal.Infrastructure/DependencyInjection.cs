@@ -35,6 +35,7 @@ public static class DependencyInjection
         // Register repositories as scoped for Cosmos DB implementation
         services.AddScoped<IStringRepository, CosmosStringRepository>();
         services.AddScoped<ISessionRepository, CosmosSessionRepository>();
+        services.AddScoped<IUserRepository, CosmosUserRepository>();
         
         return services;
     }

@@ -1,3 +1,6 @@
+// Auth hooks
+export { useAuth } from './useAuth';
+
 // Session hooks
 export {
   useSessions,

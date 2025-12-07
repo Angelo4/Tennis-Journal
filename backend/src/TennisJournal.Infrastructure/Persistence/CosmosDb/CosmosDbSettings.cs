@@ -9,4 +9,5 @@ public class CosmosDbSettings
     public string DatabaseName { get; set; } = "TennisJournal";
     public string StringsContainerName { get; set; } = "Strings";
     public string SessionsContainerName { get; set; } = "Sessions";
+    public string UsersContainerName { get; set; } = "Users";
 }

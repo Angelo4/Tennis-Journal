@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TennisJournal.Api.Controllers;
 using TennisJournal.Application.DTOs.Strings;
@@ -10,11 +12,21 @@ public class StringsControllerTests
 {
     private readonly Mock<IStringService> _stringServiceMock;
     private readonly StringsController _sut;
+    private const string TestUserId = "test-user-123";
 
     public StringsControllerTests()
     {
         _stringServiceMock = new Mock<IStringService>();
         _sut = new StringsController(_stringServiceMock.Object);
+        
+        // Setup mock HttpContext with authenticated user
+        var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, TestUserId) };
+        var identity = new ClaimsIdentity(claims, "TestAuth");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        _sut.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+        };
     }
 
     #region GetAll Tests
@@ -28,7 +40,7 @@ public class StringsControllerTests
             CreateTestResponse("1", "Luxilon", "ALU Power"),
             CreateTestResponse("2", "Babolat", "RPM Blast")
         };
-        _stringServiceMock.Setup(x => x.GetAllAsync(null)).ReturnsAsync(strings);
+        _stringServiceMock.Setup(x => x.GetAllAsync(TestUserId, null)).ReturnsAsync(strings);
 
         // Act
         var result = await _sut.GetAll();
@@ -47,7 +59,7 @@ public class StringsControllerTests
         {
             CreateTestResponse("1", "Luxilon", "ALU Power", isActive: true)
         };
-        _stringServiceMock.Setup(x => x.GetAllAsync(true)).ReturnsAsync(activeStrings);
+        _stringServiceMock.Setup(x => x.GetAllAsync(TestUserId, true)).ReturnsAsync(activeStrings);
 
         // Act
         var result = await _sut.GetAll(isActive: true);
@@ -56,7 +68,7 @@ public class StringsControllerTests
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         var returnedStrings = okResult.Value.Should().BeAssignableTo<IEnumerable<StringResponse>>().Subject;
         returnedStrings.Should().HaveCount(1);
-        _stringServiceMock.Verify(x => x.GetAllAsync(true), Times.Once);
+        _stringServiceMock.Verify(x => x.GetAllAsync(TestUserId, true), Times.Once);
     }
 
     #endregion
@@ -68,7 +80,7 @@ public class StringsControllerTests
     {
         // Arrange
         var tennisString = CreateTestResponse("123", "Luxilon", "ALU Power");
-        _stringServiceMock.Setup(x => x.GetByIdAsync("123")).ReturnsAsync(tennisString);
+        _stringServiceMock.Setup(x => x.GetByIdAsync("123", TestUserId)).ReturnsAsync(tennisString);
 
         // Act
         var result = await _sut.GetById("123");
@@ -83,7 +95,7 @@ public class StringsControllerTests
     public async Task GetById_ShouldReturnNotFound_WhenStringDoesNotExist()
     {
         // Arrange
-        _stringServiceMock.Setup(x => x.GetByIdAsync("nonexistent")).ReturnsAsync((StringResponse?)null);
+        _stringServiceMock.Setup(x => x.GetByIdAsync("nonexistent", TestUserId)).ReturnsAsync((StringResponse?)null);
 
         // Act
         var result = await _sut.GetById("nonexistent");
@@ -108,7 +120,7 @@ public class StringsControllerTests
             AverageFeelingRating: 8.5,
             DaysSinceStrung: 30
         );
-        _stringServiceMock.Setup(x => x.GetUsageStatsAsync("123")).ReturnsAsync(stats);
+        _stringServiceMock.Setup(x => x.GetUsageStatsAsync("123", TestUserId)).ReturnsAsync(stats);
 
         // Act
         var result = await _sut.GetUsageStats("123");
@@ -124,7 +136,7 @@ public class StringsControllerTests
     public async Task GetUsageStats_ShouldReturnNotFound_WhenStringDoesNotExist()
     {
         // Arrange
-        _stringServiceMock.Setup(x => x.GetUsageStatsAsync("nonexistent")).ReturnsAsync((StringUsageStatsResponse?)null);
+        _stringServiceMock.Setup(x => x.GetUsageStatsAsync("nonexistent", TestUserId)).ReturnsAsync((StringUsageStatsResponse?)null);
 
         // Act
         var result = await _sut.GetUsageStats("nonexistent");
@@ -151,7 +163,7 @@ public class StringsControllerTests
             DateStrung: DateTime.UtcNow
         );
         var createdString = CreateTestResponse("new-id", "Luxilon", "ALU Power");
-        _stringServiceMock.Setup(x => x.CreateAsync(request)).ReturnsAsync(createdString);
+        _stringServiceMock.Setup(x => x.CreateAsync(request, TestUserId)).ReturnsAsync(createdString);
 
         // Act
         var result = await _sut.Create(request);
@@ -174,7 +186,7 @@ public class StringsControllerTests
         // Arrange
         var request = new UpdateStringRequest(Brand: "Babolat");
         var updatedString = CreateTestResponse("123", "Babolat", "ALU Power");
-        _stringServiceMock.Setup(x => x.UpdateAsync("123", request)).ReturnsAsync(updatedString);
+        _stringServiceMock.Setup(x => x.UpdateAsync("123", request, TestUserId)).ReturnsAsync(updatedString);
 
         // Act
         var result = await _sut.Update("123", request);
@@ -190,7 +202,7 @@ public class StringsControllerTests
     {
         // Arrange
         var request = new UpdateStringRequest(Brand: "Babolat");
-        _stringServiceMock.Setup(x => x.UpdateAsync("nonexistent", request)).ReturnsAsync((StringResponse?)null);
+        _stringServiceMock.Setup(x => x.UpdateAsync("nonexistent", request, TestUserId)).ReturnsAsync((StringResponse?)null);
 
         // Act
         var result = await _sut.Update("nonexistent", request);
@@ -207,7 +219,7 @@ public class StringsControllerTests
     public async Task Delete_ShouldReturnNoContent_WhenStringDeleted()
     {
         // Arrange
-        _stringServiceMock.Setup(x => x.DeleteAsync("123")).ReturnsAsync(true);
+        _stringServiceMock.Setup(x => x.DeleteAsync("123", TestUserId)).ReturnsAsync(true);
 
         // Act
         var result = await _sut.Delete("123");
@@ -220,7 +232,7 @@ public class StringsControllerTests
     public async Task Delete_ShouldReturnNotFound_WhenStringDoesNotExist()
     {
         // Arrange
-        _stringServiceMock.Setup(x => x.DeleteAsync("nonexistent")).ReturnsAsync(false);
+        _stringServiceMock.Setup(x => x.DeleteAsync("nonexistent", TestUserId)).ReturnsAsync(false);
 
         // Act
         var result = await _sut.Delete("nonexistent");

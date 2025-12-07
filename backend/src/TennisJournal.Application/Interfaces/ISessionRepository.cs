@@ -7,10 +7,10 @@ namespace TennisJournal.Application.Interfaces;
 /// </summary>
 public interface ISessionRepository
 {
-    Task<IEnumerable<TennisSession>> GetAllAsync();
-    Task<TennisSession?> GetByIdAsync(string id);
+    Task<IEnumerable<TennisSession>> GetAllAsync(string userId);
+    Task<TennisSession?> GetByIdAsync(string id, string userId);
     Task<TennisSession> CreateAsync(TennisSession session);
     Task<TennisSession?> UpdateAsync(TennisSession session);
-    Task<bool> DeleteAsync(string id);
-    Task<IEnumerable<TennisSession>> GetByStringIdAsync(string stringId);
+    Task<bool> DeleteAsync(string id, string userId);
+    Task<IEnumerable<TennisSession>> GetByStringIdAsync(string stringId, string userId);
 }

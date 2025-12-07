@@ -19,9 +19,9 @@ public class CosmosDbInitializer
         // Create database if it doesn't exist
         var database = await _cosmosClient.CreateDatabaseIfNotExistsAsync(_settings.DatabaseName);
         
-        // Create Strings container with Id as partition key
+        // Create Strings container with userId as partition key for multi-tenant support
         await database.Database.CreateContainerIfNotExistsAsync(
-            new ContainerProperties(_settings.StringsContainerName, "/id")
+            new ContainerProperties(_settings.StringsContainerName, "/userId")
             {
                 IndexingPolicy = new IndexingPolicy
                 {
@@ -32,9 +32,22 @@ public class CosmosDbInitializer
                 }
             });
         
-        // Create Sessions container with Id as partition key
+        // Create Sessions container with userId as partition key for multi-tenant support
         await database.Database.CreateContainerIfNotExistsAsync(
-            new ContainerProperties(_settings.SessionsContainerName, "/id")
+            new ContainerProperties(_settings.SessionsContainerName, "/userId")
+            {
+                IndexingPolicy = new IndexingPolicy
+                {
+                    Automatic = true,
+                    IndexingMode = IndexingMode.Consistent,
+                    IncludedPaths = { new IncludedPath { Path = "/*" } },
+                    ExcludedPaths = { new ExcludedPath { Path = "/\"_etag\"/?" } }
+                }
+            });
+        
+        // Create Users container with id as partition key
+        await database.Database.CreateContainerIfNotExistsAsync(
+            new ContainerProperties(_settings.UsersContainerName, "/id")
             {
                 IndexingPolicy = new IndexingPolicy
                 {

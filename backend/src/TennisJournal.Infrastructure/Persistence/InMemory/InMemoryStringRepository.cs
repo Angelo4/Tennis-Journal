@@ -31,6 +31,7 @@ public class InMemoryStringRepository : IStringRepository
         var string1 = new TennisString
         {
             Id = "string-1",
+            UserId = "demo-user",
             Brand = "Luxilon",
             Model = "ALU Power",
             Gauge = "16L",
@@ -45,6 +46,7 @@ public class InMemoryStringRepository : IStringRepository
         var string2 = new TennisString
         {
             Id = "string-2",
+            UserId = "demo-user",
             Brand = "Wilson",
             Model = "NXT",
             Gauge = "17",
@@ -61,9 +63,9 @@ public class InMemoryStringRepository : IStringRepository
         _strings[string2.Id] = string2;
     }
 
-    public Task<IEnumerable<TennisString>> GetAllAsync(bool? isActive = null)
+    public Task<IEnumerable<TennisString>> GetAllAsync(string userId, bool? isActive = null)
     {
-        IEnumerable<TennisString> result = _strings.Values;
+        IEnumerable<TennisString> result = _strings.Values.Where(s => s.UserId == userId);
         
         if (isActive.HasValue)
         {
@@ -73,10 +75,12 @@ public class InMemoryStringRepository : IStringRepository
         return Task.FromResult(result);
     }
 
-    public Task<TennisString?> GetByIdAsync(string id)
+    public Task<TennisString?> GetByIdAsync(string id, string userId)
     {
         _strings.TryGetValue(id, out var tennisString);
-        return Task.FromResult(tennisString);
+        if (tennisString?.UserId != userId)
+            return Task.FromResult<TennisString?>(null);
+        return Task.FromResult<TennisString?>(tennisString);
     }
 
     public Task<TennisString> CreateAsync(TennisString tennisString)
@@ -98,8 +102,12 @@ public class InMemoryStringRepository : IStringRepository
         return Task.FromResult<TennisString?>(tennisString);
     }
 
-    public Task<bool> DeleteAsync(string id)
+    public Task<bool> DeleteAsync(string id, string userId)
     {
-        return Task.FromResult(_strings.Remove(id));
+        if (_strings.TryGetValue(id, out var tennisString) && tennisString.UserId == userId)
+        {
+            return Task.FromResult(_strings.Remove(id));
+        }
+        return Task.FromResult(false);
     }
 }

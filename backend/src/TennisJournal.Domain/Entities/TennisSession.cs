@@ -8,6 +8,12 @@ namespace TennisJournal.Domain.Entities;
 public class TennisSession
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
+    
+    /// <summary>
+    /// The ID of the user who owns this session
+    /// </summary>
+    public string UserId { get; set; } = string.Empty;
+    
     public DateTime SessionDate { get; set; }
     public SessionType Type { get; set; }
     public int DurationMinutes { get; set; }

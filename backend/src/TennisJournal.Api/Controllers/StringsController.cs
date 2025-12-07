@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TennisJournal.Application.DTOs.Strings;
 using TennisJournal.Application.Services;
 
@@ -7,6 +9,7 @@ namespace TennisJournal.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
+[Authorize]
 public class StringsController : ControllerBase
 {
     private readonly IStringService _stringService;
@@ -16,6 +19,9 @@ public class StringsController : ControllerBase
         _stringService = stringService;
     }
 
+    private string GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier)
+        ?? throw new UnauthorizedAccessException("User ID not found in token");
+
     /// <summary>
     /// Get all tennis strings
     /// </summary>
@@ -24,7 +30,8 @@ public class StringsController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<StringResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<StringResponse>>> GetAll([FromQuery] bool? isActive = null)
     {
-        var strings = await _stringService.GetAllAsync(isActive);
+        var userId = GetUserId();
+        var strings = await _stringService.GetAllAsync(userId, isActive);
         return Ok(strings);
     }
 
@@ -36,7 +43,8 @@ public class StringsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<StringResponse>> GetById(string id)
     {
-        var result = await _stringService.GetByIdAsync(id);
+        var userId = GetUserId();
+        var result = await _stringService.GetByIdAsync(id, userId);
         if (result == null)
             return NotFound();
         
@@ -51,7 +59,8 @@ public class StringsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<StringUsageStatsResponse>> GetUsageStats(string id)
     {
-        var result = await _stringService.GetUsageStatsAsync(id);
+        var userId = GetUserId();
+        var result = await _stringService.GetUsageStatsAsync(id, userId);
         if (result == null)
             return NotFound();
 
@@ -66,7 +75,8 @@ public class StringsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<StringResponse>> Create([FromBody] CreateStringRequest request)
     {
-        var created = await _stringService.CreateAsync(request);
+        var userId = GetUserId();
+        var created = await _stringService.CreateAsync(request, userId);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
@@ -78,7 +88,8 @@ public class StringsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<StringResponse>> Update(string id, [FromBody] UpdateStringRequest request)
     {
-        var updated = await _stringService.UpdateAsync(id, request);
+        var userId = GetUserId();
+        var updated = await _stringService.UpdateAsync(id, request, userId);
         if (updated == null)
             return NotFound();
 
@@ -93,7 +104,8 @@ public class StringsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(string id)
     {
-        var deleted = await _stringService.DeleteAsync(id);
+        var userId = GetUserId();
+        var deleted = await _stringService.DeleteAsync(id, userId);
         if (!deleted)
             return NotFound();
         
@@ -108,7 +120,8 @@ public class StringsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<StringResponse>> Remove(string id)
     {
-        var result = await _stringService.RemoveAsync(id);
+        var userId = GetUserId();
+        var result = await _stringService.RemoveAsync(id, userId);
         if (result == null)
             return NotFound();
 
@@ -123,7 +136,8 @@ public class StringsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<StringResponse>> Restore(string id)
     {
-        var result = await _stringService.RestoreAsync(id);
+        var userId = GetUserId();
+        var result = await _stringService.RestoreAsync(id, userId);
         if (result == null)
             return NotFound();
 

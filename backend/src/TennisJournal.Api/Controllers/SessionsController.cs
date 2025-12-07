@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TennisJournal.Application.DTOs.Sessions;
 using TennisJournal.Application.Services;
 
@@ -7,6 +9,7 @@ namespace TennisJournal.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
+[Authorize]
 public class SessionsController : ControllerBase
 {
     private readonly ISessionService _sessionService;
@@ -16,6 +19,9 @@ public class SessionsController : ControllerBase
         _sessionService = sessionService;
     }
 
+    private string GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier)
+        ?? throw new UnauthorizedAccessException("User ID not found in token");
+
     /// <summary>
     /// Get all tennis sessions
     /// </summary>
@@ -23,7 +29,8 @@ public class SessionsController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<SessionResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<SessionResponse>>> GetAll()
     {
-        var sessions = await _sessionService.GetAllAsync();
+        var userId = GetUserId();
+        var sessions = await _sessionService.GetAllAsync(userId);
         return Ok(sessions);
     }
 
@@ -35,7 +42,8 @@ public class SessionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<SessionResponse>> GetById(string id)
     {
-        var session = await _sessionService.GetByIdAsync(id);
+        var userId = GetUserId();
+        var session = await _sessionService.GetByIdAsync(id, userId);
         if (session == null)
             return NotFound();
         
@@ -50,7 +58,8 @@ public class SessionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<SessionWithStringResponse>> GetWithString(string id)
     {
-        var result = await _sessionService.GetWithStringAsync(id);
+        var userId = GetUserId();
+        var result = await _sessionService.GetWithStringAsync(id, userId);
         if (result == null)
             return NotFound();
 
@@ -65,15 +74,17 @@ public class SessionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<SessionResponse>> Create([FromBody] CreateSessionRequest request)
     {
+        var userId = GetUserId();
+        
         // Validate string ID if provided
         if (!string.IsNullOrEmpty(request.StringId))
         {
-            var stringExists = await _sessionService.StringExistsAsync(request.StringId);
+            var stringExists = await _sessionService.StringExistsAsync(request.StringId, userId);
             if (!stringExists)
                 return BadRequest($"String with ID '{request.StringId}' not found");
         }
 
-        var created = await _sessionService.CreateAsync(request);
+        var created = await _sessionService.CreateAsync(request, userId);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
@@ -86,15 +97,17 @@ public class SessionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<SessionResponse>> Update(string id, [FromBody] UpdateSessionRequest request)
     {
+        var userId = GetUserId();
+        
         // Validate string ID if being updated
         if (!string.IsNullOrEmpty(request.StringId))
         {
-            var stringExists = await _sessionService.StringExistsAsync(request.StringId);
+            var stringExists = await _sessionService.StringExistsAsync(request.StringId, userId);
             if (!stringExists)
                 return BadRequest($"String with ID '{request.StringId}' not found");
         }
 
-        var updated = await _sessionService.UpdateAsync(id, request);
+        var updated = await _sessionService.UpdateAsync(id, request, userId);
         if (updated == null)
             return NotFound();
 
@@ -109,7 +122,8 @@ public class SessionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(string id)
     {
-        var deleted = await _sessionService.DeleteAsync(id);
+        var userId = GetUserId();
+        var deleted = await _sessionService.DeleteAsync(id, userId);
         if (!deleted)
             return NotFound();
         

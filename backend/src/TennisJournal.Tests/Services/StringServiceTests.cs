@@ -11,6 +11,7 @@ public class StringServiceTests
     private readonly Mock<IStringRepository> _stringRepositoryMock;
     private readonly Mock<ISessionRepository> _sessionRepositoryMock;
     private readonly StringService _sut;
+    private const string TestUserId = "test-user-123";
 
     public StringServiceTests()
     {
@@ -30,14 +31,14 @@ public class StringServiceTests
             CreateTestString("1", "Luxilon", "ALU Power"),
             CreateTestString("2", "Babolat", "RPM Blast")
         };
-        _stringRepositoryMock.Setup(x => x.GetAllAsync(null)).ReturnsAsync(strings);
+        _stringRepositoryMock.Setup(x => x.GetAllAsync(TestUserId, null)).ReturnsAsync(strings);
 
         // Act
-        var result = await _sut.GetAllAsync();
+        var result = await _sut.GetAllAsync(TestUserId);
 
         // Assert
         result.Should().HaveCount(2);
-        _stringRepositoryMock.Verify(x => x.GetAllAsync(null), Times.Once);
+        _stringRepositoryMock.Verify(x => x.GetAllAsync(TestUserId, null), Times.Once);
     }
 
     [Fact]
@@ -45,10 +46,10 @@ public class StringServiceTests
     {
         // Arrange
         var activeString = CreateTestString("1", "Luxilon", "ALU Power", isActive: true);
-        _stringRepositoryMock.Setup(x => x.GetAllAsync(true)).ReturnsAsync(new[] { activeString });
+        _stringRepositoryMock.Setup(x => x.GetAllAsync(TestUserId, true)).ReturnsAsync(new[] { activeString });
 
         // Act
-        var result = await _sut.GetAllAsync(isActive: true);
+        var result = await _sut.GetAllAsync(TestUserId, isActive: true);
 
         // Assert
         result.Should().HaveCount(1);
@@ -59,10 +60,10 @@ public class StringServiceTests
     public async Task GetAllAsync_ShouldReturnEmptyList_WhenNoStringsExist()
     {
         // Arrange
-        _stringRepositoryMock.Setup(x => x.GetAllAsync(null)).ReturnsAsync(Enumerable.Empty<TennisString>());
+        _stringRepositoryMock.Setup(x => x.GetAllAsync(TestUserId, null)).ReturnsAsync(Enumerable.Empty<TennisString>());
 
         // Act
-        var result = await _sut.GetAllAsync();
+        var result = await _sut.GetAllAsync(TestUserId);
 
         // Assert
         result.Should().BeEmpty();
@@ -77,10 +78,10 @@ public class StringServiceTests
     {
         // Arrange
         var tennisString = CreateTestString("123", "Luxilon", "ALU Power");
-        _stringRepositoryMock.Setup(x => x.GetByIdAsync("123")).ReturnsAsync(tennisString);
+        _stringRepositoryMock.Setup(x => x.GetByIdAsync("123", TestUserId)).ReturnsAsync(tennisString);
 
         // Act
-        var result = await _sut.GetByIdAsync("123");
+        var result = await _sut.GetByIdAsync("123", TestUserId);
 
         // Assert
         result.Should().NotBeNull();
@@ -92,10 +93,10 @@ public class StringServiceTests
     public async Task GetByIdAsync_ShouldReturnNull_WhenStringDoesNotExist()
     {
         // Arrange
-        _stringRepositoryMock.Setup(x => x.GetByIdAsync("nonexistent")).ReturnsAsync((TennisString?)null);
+        _stringRepositoryMock.Setup(x => x.GetByIdAsync("nonexistent", TestUserId)).ReturnsAsync((TennisString?)null);
 
         // Act
-        var result = await _sut.GetByIdAsync("nonexistent");
+        var result = await _sut.GetByIdAsync("nonexistent", TestUserId);
 
         // Assert
         result.Should().BeNull();
@@ -130,7 +131,7 @@ public class StringServiceTests
             });
 
         // Act
-        var result = await _sut.CreateAsync(request);
+        var result = await _sut.CreateAsync(request, TestUserId);
 
         // Assert
         result.Should().NotBeNull();
@@ -151,11 +152,11 @@ public class StringServiceTests
         var existingString = CreateTestString("123", "Luxilon", "ALU Power");
         var request = new UpdateStringRequest(Brand: "Babolat", Model: "RPM Blast");
 
-        _stringRepositoryMock.Setup(x => x.GetByIdAsync("123")).ReturnsAsync(existingString);
+        _stringRepositoryMock.Setup(x => x.GetByIdAsync("123", TestUserId)).ReturnsAsync(existingString);
         _stringRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<TennisString>())).ReturnsAsync((TennisString s) => s);
 
         // Act
-        var result = await _sut.UpdateAsync("123", request);
+        var result = await _sut.UpdateAsync("123", request, TestUserId);
 
         // Assert
         result.Should().NotBeNull();
@@ -167,10 +168,10 @@ public class StringServiceTests
     public async Task UpdateAsync_ShouldReturnNull_WhenStringDoesNotExist()
     {
         // Arrange
-        _stringRepositoryMock.Setup(x => x.GetByIdAsync("nonexistent")).ReturnsAsync((TennisString?)null);
+        _stringRepositoryMock.Setup(x => x.GetByIdAsync("nonexistent", TestUserId)).ReturnsAsync((TennisString?)null);
 
         // Act
-        var result = await _sut.UpdateAsync("nonexistent", new UpdateStringRequest());
+        var result = await _sut.UpdateAsync("nonexistent", new UpdateStringRequest(), TestUserId);
 
         // Assert
         result.Should().BeNull();
@@ -185,11 +186,11 @@ public class StringServiceTests
         existingString.Notes = "Original notes";
         var request = new UpdateStringRequest(Brand: "Babolat"); // Only updating brand
 
-        _stringRepositoryMock.Setup(x => x.GetByIdAsync("123")).ReturnsAsync(existingString);
+        _stringRepositoryMock.Setup(x => x.GetByIdAsync("123", TestUserId)).ReturnsAsync(existingString);
         _stringRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<TennisString>())).ReturnsAsync((TennisString s) => s);
 
         // Act
-        var result = await _sut.UpdateAsync("123", request);
+        var result = await _sut.UpdateAsync("123", request, TestUserId);
 
         // Assert
         result.Should().NotBeNull();
@@ -206,10 +207,10 @@ public class StringServiceTests
     public async Task DeleteAsync_ShouldReturnTrue_WhenStringDeleted()
     {
         // Arrange
-        _stringRepositoryMock.Setup(x => x.DeleteAsync("123")).ReturnsAsync(true);
+        _stringRepositoryMock.Setup(x => x.DeleteAsync("123", TestUserId)).ReturnsAsync(true);
 
         // Act
-        var result = await _sut.DeleteAsync("123");
+        var result = await _sut.DeleteAsync("123", TestUserId);
 
         // Assert
         result.Should().BeTrue();
@@ -219,10 +220,10 @@ public class StringServiceTests
     public async Task DeleteAsync_ShouldReturnFalse_WhenStringDoesNotExist()
     {
         // Arrange
-        _stringRepositoryMock.Setup(x => x.DeleteAsync("nonexistent")).ReturnsAsync(false);
+        _stringRepositoryMock.Setup(x => x.DeleteAsync("nonexistent", TestUserId)).ReturnsAsync(false);
 
         // Act
-        var result = await _sut.DeleteAsync("nonexistent");
+        var result = await _sut.DeleteAsync("nonexistent", TestUserId);
 
         // Assert
         result.Should().BeFalse();
@@ -237,11 +238,11 @@ public class StringServiceTests
     {
         // Arrange
         var existingString = CreateTestString("123", "Luxilon", "ALU Power", isActive: true);
-        _stringRepositoryMock.Setup(x => x.GetByIdAsync("123")).ReturnsAsync(existingString);
+        _stringRepositoryMock.Setup(x => x.GetByIdAsync("123", TestUserId)).ReturnsAsync(existingString);
         _stringRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<TennisString>())).ReturnsAsync((TennisString s) => s);
 
         // Act
-        var result = await _sut.RemoveAsync("123");
+        var result = await _sut.RemoveAsync("123", TestUserId);
 
         // Assert
         result.Should().NotBeNull();
@@ -253,10 +254,10 @@ public class StringServiceTests
     public async Task RemoveAsync_ShouldReturnNull_WhenStringDoesNotExist()
     {
         // Arrange
-        _stringRepositoryMock.Setup(x => x.GetByIdAsync("nonexistent")).ReturnsAsync((TennisString?)null);
+        _stringRepositoryMock.Setup(x => x.GetByIdAsync("nonexistent", TestUserId)).ReturnsAsync((TennisString?)null);
 
         // Act
-        var result = await _sut.RemoveAsync("nonexistent");
+        var result = await _sut.RemoveAsync("nonexistent", TestUserId);
 
         // Assert
         result.Should().BeNull();
@@ -272,11 +273,11 @@ public class StringServiceTests
         // Arrange
         var existingString = CreateTestString("123", "Luxilon", "ALU Power", isActive: false);
         existingString.DateRemoved = DateTime.UtcNow.AddDays(-7);
-        _stringRepositoryMock.Setup(x => x.GetByIdAsync("123")).ReturnsAsync(existingString);
+        _stringRepositoryMock.Setup(x => x.GetByIdAsync("123", TestUserId)).ReturnsAsync(existingString);
         _stringRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<TennisString>())).ReturnsAsync((TennisString s) => s);
 
         // Act
-        var result = await _sut.RestoreAsync("123");
+        var result = await _sut.RestoreAsync("123", TestUserId);
 
         // Assert
         result.Should().NotBeNull();
@@ -297,15 +298,15 @@ public class StringServiceTests
         
         var sessions = new List<TennisSession>
         {
-            new() { Id = "s1", StringId = "123", DurationMinutes = 60, StringFeelingRating = 8 },
-            new() { Id = "s2", StringId = "123", DurationMinutes = 90, StringFeelingRating = 7 }
+            new() { Id = "s1", UserId = TestUserId, StringId = "123", DurationMinutes = 60, StringFeelingRating = 8 },
+            new() { Id = "s2", UserId = TestUserId, StringId = "123", DurationMinutes = 90, StringFeelingRating = 7 }
         };
 
-        _stringRepositoryMock.Setup(x => x.GetByIdAsync("123")).ReturnsAsync(tennisString);
-        _sessionRepositoryMock.Setup(x => x.GetByStringIdAsync("123")).ReturnsAsync(sessions);
+        _stringRepositoryMock.Setup(x => x.GetByIdAsync("123", TestUserId)).ReturnsAsync(tennisString);
+        _sessionRepositoryMock.Setup(x => x.GetByStringIdAsync("123", TestUserId)).ReturnsAsync(sessions);
 
         // Act
-        var result = await _sut.GetUsageStatsAsync("123");
+        var result = await _sut.GetUsageStatsAsync("123", TestUserId);
 
         // Assert
         result.Should().NotBeNull();
@@ -319,10 +320,10 @@ public class StringServiceTests
     public async Task GetUsageStatsAsync_ShouldReturnNull_WhenStringDoesNotExist()
     {
         // Arrange
-        _stringRepositoryMock.Setup(x => x.GetByIdAsync("nonexistent")).ReturnsAsync((TennisString?)null);
+        _stringRepositoryMock.Setup(x => x.GetByIdAsync("nonexistent", TestUserId)).ReturnsAsync((TennisString?)null);
 
         // Act
-        var result = await _sut.GetUsageStatsAsync("nonexistent");
+        var result = await _sut.GetUsageStatsAsync("nonexistent", TestUserId);
 
         // Assert
         result.Should().BeNull();
@@ -337,6 +338,7 @@ public class StringServiceTests
         return new TennisString
         {
             Id = id,
+            UserId = TestUserId,
             Brand = brand,
             Model = model,
             Gauge = "16",

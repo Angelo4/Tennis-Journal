@@ -11,6 +11,7 @@ public class SessionServiceTests
     private readonly Mock<ISessionRepository> _sessionRepositoryMock;
     private readonly Mock<IStringRepository> _stringRepositoryMock;
     private readonly SessionService _sut;
+    private const string TestUserId = "test-user-123";
 
     public SessionServiceTests()
     {
@@ -30,24 +31,24 @@ public class SessionServiceTests
             CreateTestSession("1", SessionType.Practice),
             CreateTestSession("2", SessionType.Match)
         };
-        _sessionRepositoryMock.Setup(x => x.GetAllAsync()).ReturnsAsync(sessions);
+        _sessionRepositoryMock.Setup(x => x.GetAllAsync(TestUserId)).ReturnsAsync(sessions);
 
         // Act
-        var result = await _sut.GetAllAsync();
+        var result = await _sut.GetAllAsync(TestUserId);
 
         // Assert
         result.Should().HaveCount(2);
-        _sessionRepositoryMock.Verify(x => x.GetAllAsync(), Times.Once);
+        _sessionRepositoryMock.Verify(x => x.GetAllAsync(TestUserId), Times.Once);
     }
 
     [Fact]
     public async Task GetAllAsync_ShouldReturnEmptyList_WhenNoSessionsExist()
     {
         // Arrange
-        _sessionRepositoryMock.Setup(x => x.GetAllAsync()).ReturnsAsync(Enumerable.Empty<TennisSession>());
+        _sessionRepositoryMock.Setup(x => x.GetAllAsync(TestUserId)).ReturnsAsync(Enumerable.Empty<TennisSession>());
 
         // Act
-        var result = await _sut.GetAllAsync();
+        var result = await _sut.GetAllAsync(TestUserId);
 
         // Assert
         result.Should().BeEmpty();
@@ -62,10 +63,10 @@ public class SessionServiceTests
     {
         // Arrange
         var session = CreateTestSession("123", SessionType.Match);
-        _sessionRepositoryMock.Setup(x => x.GetByIdAsync("123")).ReturnsAsync(session);
+        _sessionRepositoryMock.Setup(x => x.GetByIdAsync("123", TestUserId)).ReturnsAsync(session);
 
         // Act
-        var result = await _sut.GetByIdAsync("123");
+        var result = await _sut.GetByIdAsync("123", TestUserId);
 
         // Assert
         result.Should().NotBeNull();
@@ -77,10 +78,10 @@ public class SessionServiceTests
     public async Task GetByIdAsync_ShouldReturnNull_WhenSessionDoesNotExist()
     {
         // Arrange
-        _sessionRepositoryMock.Setup(x => x.GetByIdAsync("nonexistent")).ReturnsAsync((TennisSession?)null);
+        _sessionRepositoryMock.Setup(x => x.GetByIdAsync("nonexistent", TestUserId)).ReturnsAsync((TennisSession?)null);
 
         // Act
-        var result = await _sut.GetByIdAsync("nonexistent");
+        var result = await _sut.GetByIdAsync("nonexistent", TestUserId);
 
         // Assert
         result.Should().BeNull();
@@ -99,17 +100,18 @@ public class SessionServiceTests
         var tennisString = new TennisString
         {
             Id = "string-1",
+            UserId = TestUserId,
             Brand = "Luxilon",
             Model = "ALU Power",
             Type = StringType.Polyester,
             DateStrung = DateTime.UtcNow
         };
 
-        _sessionRepositoryMock.Setup(x => x.GetByIdAsync("123")).ReturnsAsync(session);
-        _stringRepositoryMock.Setup(x => x.GetByIdAsync("string-1")).ReturnsAsync(tennisString);
+        _sessionRepositoryMock.Setup(x => x.GetByIdAsync("123", TestUserId)).ReturnsAsync(session);
+        _stringRepositoryMock.Setup(x => x.GetByIdAsync("string-1", TestUserId)).ReturnsAsync(tennisString);
 
         // Act
-        var result = await _sut.GetWithStringAsync("123");
+        var result = await _sut.GetWithStringAsync("123", TestUserId);
 
         // Assert
         result.Should().NotBeNull();
@@ -125,10 +127,10 @@ public class SessionServiceTests
         var session = CreateTestSession("123", SessionType.Practice);
         session.StringId = null;
 
-        _sessionRepositoryMock.Setup(x => x.GetByIdAsync("123")).ReturnsAsync(session);
+        _sessionRepositoryMock.Setup(x => x.GetByIdAsync("123", TestUserId)).ReturnsAsync(session);
 
         // Act
-        var result = await _sut.GetWithStringAsync("123");
+        var result = await _sut.GetWithStringAsync("123", TestUserId);
 
         // Assert
         result.Should().NotBeNull();
@@ -140,10 +142,10 @@ public class SessionServiceTests
     public async Task GetWithStringAsync_ShouldReturnNull_WhenSessionDoesNotExist()
     {
         // Arrange
-        _sessionRepositoryMock.Setup(x => x.GetByIdAsync("nonexistent")).ReturnsAsync((TennisSession?)null);
+        _sessionRepositoryMock.Setup(x => x.GetByIdAsync("nonexistent", TestUserId)).ReturnsAsync((TennisSession?)null);
 
         // Act
-        var result = await _sut.GetWithStringAsync("nonexistent");
+        var result = await _sut.GetWithStringAsync("nonexistent", TestUserId);
 
         // Assert
         result.Should().BeNull();
@@ -178,7 +180,7 @@ public class SessionServiceTests
             });
 
         // Act
-        var result = await _sut.CreateAsync(request);
+        var result = await _sut.CreateAsync(request, TestUserId);
 
         // Assert
         result.Should().NotBeNull();
@@ -200,11 +202,11 @@ public class SessionServiceTests
         var existingSession = CreateTestSession("123", SessionType.Practice);
         var request = new UpdateSessionRequest(Type: SessionType.Match, DurationMinutes: 120);
 
-        _sessionRepositoryMock.Setup(x => x.GetByIdAsync("123")).ReturnsAsync(existingSession);
+        _sessionRepositoryMock.Setup(x => x.GetByIdAsync("123", TestUserId)).ReturnsAsync(existingSession);
         _sessionRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<TennisSession>())).ReturnsAsync((TennisSession s) => s);
 
         // Act
-        var result = await _sut.UpdateAsync("123", request);
+        var result = await _sut.UpdateAsync("123", request, TestUserId);
 
         // Assert
         result.Should().NotBeNull();
@@ -216,10 +218,10 @@ public class SessionServiceTests
     public async Task UpdateAsync_ShouldReturnNull_WhenSessionDoesNotExist()
     {
         // Arrange
-        _sessionRepositoryMock.Setup(x => x.GetByIdAsync("nonexistent")).ReturnsAsync((TennisSession?)null);
+        _sessionRepositoryMock.Setup(x => x.GetByIdAsync("nonexistent", TestUserId)).ReturnsAsync((TennisSession?)null);
 
         // Act
-        var result = await _sut.UpdateAsync("nonexistent", new UpdateSessionRequest());
+        var result = await _sut.UpdateAsync("nonexistent", new UpdateSessionRequest(), TestUserId);
 
         // Assert
         result.Should().BeNull();
@@ -235,11 +237,11 @@ public class SessionServiceTests
         existingSession.Notes = "Original notes";
         var request = new UpdateSessionRequest(DurationMinutes: 150); // Only updating duration
 
-        _sessionRepositoryMock.Setup(x => x.GetByIdAsync("123")).ReturnsAsync(existingSession);
+        _sessionRepositoryMock.Setup(x => x.GetByIdAsync("123", TestUserId)).ReturnsAsync(existingSession);
         _sessionRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<TennisSession>())).ReturnsAsync((TennisSession s) => s);
 
         // Act
-        var result = await _sut.UpdateAsync("123", request);
+        var result = await _sut.UpdateAsync("123", request, TestUserId);
 
         // Assert
         result.Should().NotBeNull();
@@ -256,10 +258,10 @@ public class SessionServiceTests
     public async Task DeleteAsync_ShouldReturnTrue_WhenSessionDeleted()
     {
         // Arrange
-        _sessionRepositoryMock.Setup(x => x.DeleteAsync("123")).ReturnsAsync(true);
+        _sessionRepositoryMock.Setup(x => x.DeleteAsync("123", TestUserId)).ReturnsAsync(true);
 
         // Act
-        var result = await _sut.DeleteAsync("123");
+        var result = await _sut.DeleteAsync("123", TestUserId);
 
         // Assert
         result.Should().BeTrue();
@@ -269,10 +271,10 @@ public class SessionServiceTests
     public async Task DeleteAsync_ShouldReturnFalse_WhenSessionDoesNotExist()
     {
         // Arrange
-        _sessionRepositoryMock.Setup(x => x.DeleteAsync("nonexistent")).ReturnsAsync(false);
+        _sessionRepositoryMock.Setup(x => x.DeleteAsync("nonexistent", TestUserId)).ReturnsAsync(false);
 
         // Act
-        var result = await _sut.DeleteAsync("nonexistent");
+        var result = await _sut.DeleteAsync("nonexistent", TestUserId);
 
         // Assert
         result.Should().BeFalse();
@@ -286,11 +288,11 @@ public class SessionServiceTests
     public async Task StringExistsAsync_ShouldReturnTrue_WhenStringExists()
     {
         // Arrange
-        var tennisString = new TennisString { Id = "string-1" };
-        _stringRepositoryMock.Setup(x => x.GetByIdAsync("string-1")).ReturnsAsync(tennisString);
+        var tennisString = new TennisString { Id = "string-1", UserId = TestUserId };
+        _stringRepositoryMock.Setup(x => x.GetByIdAsync("string-1", TestUserId)).ReturnsAsync(tennisString);
 
         // Act
-        var result = await _sut.StringExistsAsync("string-1");
+        var result = await _sut.StringExistsAsync("string-1", TestUserId);
 
         // Assert
         result.Should().BeTrue();
@@ -300,10 +302,10 @@ public class SessionServiceTests
     public async Task StringExistsAsync_ShouldReturnFalse_WhenStringDoesNotExist()
     {
         // Arrange
-        _stringRepositoryMock.Setup(x => x.GetByIdAsync("nonexistent")).ReturnsAsync((TennisString?)null);
+        _stringRepositoryMock.Setup(x => x.GetByIdAsync("nonexistent", TestUserId)).ReturnsAsync((TennisString?)null);
 
         // Act
-        var result = await _sut.StringExistsAsync("nonexistent");
+        var result = await _sut.StringExistsAsync("nonexistent", TestUserId);
 
         // Assert
         result.Should().BeFalse();
@@ -318,6 +320,7 @@ public class SessionServiceTests
         return new TennisSession
         {
             Id = id,
+            UserId = TestUserId,
             SessionDate = DateTime.UtcNow,
             Type = type,
             DurationMinutes = 60,

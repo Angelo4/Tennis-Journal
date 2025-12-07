@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TennisJournal.Api.Controllers;
 using TennisJournal.Application.DTOs.Sessions;
@@ -11,11 +13,21 @@ public class SessionsControllerTests
 {
     private readonly Mock<ISessionService> _sessionServiceMock;
     private readonly SessionsController _sut;
+    private const string TestUserId = "test-user-123";
 
     public SessionsControllerTests()
     {
         _sessionServiceMock = new Mock<ISessionService>();
         _sut = new SessionsController(_sessionServiceMock.Object);
+        
+        // Setup mock HttpContext with authenticated user
+        var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, TestUserId) };
+        var identity = new ClaimsIdentity(claims, "TestAuth");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        _sut.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+        };
     }
 
     #region GetAll Tests
@@ -29,7 +41,7 @@ public class SessionsControllerTests
             CreateTestResponse("1", SessionType.Practice),
             CreateTestResponse("2", SessionType.Match)
         };
-        _sessionServiceMock.Setup(x => x.GetAllAsync()).ReturnsAsync(sessions);
+        _sessionServiceMock.Setup(x => x.GetAllAsync(TestUserId)).ReturnsAsync(sessions);
 
         // Act
         var result = await _sut.GetAll();
@@ -49,7 +61,7 @@ public class SessionsControllerTests
     {
         // Arrange
         var session = CreateTestResponse("123", SessionType.Match);
-        _sessionServiceMock.Setup(x => x.GetByIdAsync("123")).ReturnsAsync(session);
+        _sessionServiceMock.Setup(x => x.GetByIdAsync("123", TestUserId)).ReturnsAsync(session);
 
         // Act
         var result = await _sut.GetById("123");
@@ -64,7 +76,7 @@ public class SessionsControllerTests
     public async Task GetById_ShouldReturnNotFound_WhenSessionDoesNotExist()
     {
         // Arrange
-        _sessionServiceMock.Setup(x => x.GetByIdAsync("nonexistent")).ReturnsAsync((SessionResponse?)null);
+        _sessionServiceMock.Setup(x => x.GetByIdAsync("nonexistent", TestUserId)).ReturnsAsync((SessionResponse?)null);
 
         // Act
         var result = await _sut.GetById("nonexistent");
@@ -99,7 +111,7 @@ public class SessionsControllerTests
                 UpdatedAt: DateTime.UtcNow
             )
         );
-        _sessionServiceMock.Setup(x => x.GetWithStringAsync("123")).ReturnsAsync(sessionWithString);
+        _sessionServiceMock.Setup(x => x.GetWithStringAsync("123", TestUserId)).ReturnsAsync(sessionWithString);
 
         // Act
         var result = await _sut.GetWithString("123");
@@ -116,7 +128,7 @@ public class SessionsControllerTests
     public async Task GetWithString_ShouldReturnNotFound_WhenSessionDoesNotExist()
     {
         // Arrange
-        _sessionServiceMock.Setup(x => x.GetWithStringAsync("nonexistent")).ReturnsAsync((SessionWithStringResponse?)null);
+        _sessionServiceMock.Setup(x => x.GetWithStringAsync("nonexistent", TestUserId)).ReturnsAsync((SessionWithStringResponse?)null);
 
         // Act
         var result = await _sut.GetWithString("nonexistent");
@@ -140,7 +152,7 @@ public class SessionsControllerTests
             Location: "Tennis Club"
         );
         var createdSession = CreateTestResponse("new-id", SessionType.Match);
-        _sessionServiceMock.Setup(x => x.CreateAsync(request)).ReturnsAsync(createdSession);
+        _sessionServiceMock.Setup(x => x.CreateAsync(request, TestUserId)).ReturnsAsync(createdSession);
 
         // Act
         var result = await _sut.Create(request);
@@ -161,7 +173,7 @@ public class SessionsControllerTests
             DurationMinutes: 90,
             StringId: "invalid-string"
         );
-        _sessionServiceMock.Setup(x => x.StringExistsAsync("invalid-string")).ReturnsAsync(false);
+        _sessionServiceMock.Setup(x => x.StringExistsAsync("invalid-string", TestUserId)).ReturnsAsync(false);
 
         // Act
         var result = await _sut.Create(request);
@@ -182,8 +194,8 @@ public class SessionsControllerTests
             StringId: "valid-string"
         );
         var createdSession = CreateTestResponse("new-id", SessionType.Match);
-        _sessionServiceMock.Setup(x => x.StringExistsAsync("valid-string")).ReturnsAsync(true);
-        _sessionServiceMock.Setup(x => x.CreateAsync(request)).ReturnsAsync(createdSession);
+        _sessionServiceMock.Setup(x => x.StringExistsAsync("valid-string", TestUserId)).ReturnsAsync(true);
+        _sessionServiceMock.Setup(x => x.CreateAsync(request, TestUserId)).ReturnsAsync(createdSession);
 
         // Act
         var result = await _sut.Create(request);
@@ -202,7 +214,7 @@ public class SessionsControllerTests
         // Arrange
         var request = new UpdateSessionRequest(DurationMinutes: 120);
         var updatedSession = CreateTestResponse("123", SessionType.Match);
-        _sessionServiceMock.Setup(x => x.UpdateAsync("123", request)).ReturnsAsync(updatedSession);
+        _sessionServiceMock.Setup(x => x.UpdateAsync("123", request, TestUserId)).ReturnsAsync(updatedSession);
 
         // Act
         var result = await _sut.Update("123", request);
@@ -217,7 +229,7 @@ public class SessionsControllerTests
     {
         // Arrange
         var request = new UpdateSessionRequest(DurationMinutes: 120);
-        _sessionServiceMock.Setup(x => x.UpdateAsync("nonexistent", request)).ReturnsAsync((SessionResponse?)null);
+        _sessionServiceMock.Setup(x => x.UpdateAsync("nonexistent", request, TestUserId)).ReturnsAsync((SessionResponse?)null);
 
         // Act
         var result = await _sut.Update("nonexistent", request);
@@ -231,7 +243,7 @@ public class SessionsControllerTests
     {
         // Arrange
         var request = new UpdateSessionRequest(StringId: "invalid-string");
-        _sessionServiceMock.Setup(x => x.StringExistsAsync("invalid-string")).ReturnsAsync(false);
+        _sessionServiceMock.Setup(x => x.StringExistsAsync("invalid-string", TestUserId)).ReturnsAsync(false);
 
         // Act
         var result = await _sut.Update("123", request);
@@ -249,7 +261,7 @@ public class SessionsControllerTests
     public async Task Delete_ShouldReturnNoContent_WhenSessionDeleted()
     {
         // Arrange
-        _sessionServiceMock.Setup(x => x.DeleteAsync("123")).ReturnsAsync(true);
+        _sessionServiceMock.Setup(x => x.DeleteAsync("123", TestUserId)).ReturnsAsync(true);
 
         // Act
         var result = await _sut.Delete("123");
@@ -262,7 +274,7 @@ public class SessionsControllerTests
     public async Task Delete_ShouldReturnNotFound_WhenSessionDoesNotExist()
     {
         // Arrange
-        _sessionServiceMock.Setup(x => x.DeleteAsync("nonexistent")).ReturnsAsync(false);
+        _sessionServiceMock.Setup(x => x.DeleteAsync("nonexistent", TestUserId)).ReturnsAsync(false);
 
         // Act
         var result = await _sut.Delete("nonexistent");
