@@ -1,0 +1,270 @@
+name: Application Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/release.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      deploy_backend:
+        description: 'Deploy Backend'
+        required: false
+        default: true
+        type: boolean
+      deploy_frontend:
+        description: 'Deploy Frontend'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  id-token: write
+  contents: read
+  packages: write
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  NODE_VERSION: '20.x'
+  AZURE_RESOURCE_GROUP: rg-tennis-journal-${{ github.event.inputs.environment || 'dev' }}
+
+jobs:
+  # ============================================
+  # Backend Build and Test
+  # ============================================
+  backend-build:
+    name: Build Backend
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.deploy_backend != 'false' }}
+    
+    defaults:
+      run:
+        working-directory: ./backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore TennisJournal.sln
+
+      - name: Build
+        run: dotnet build TennisJournal.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test TennisJournal.sln --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
+
+      - name: Publish API
+        run: dotnet publish src/TennisJournal.Api/TennisJournal.Api.csproj --configuration Release --no-build --output ./publish/api
+
+      - name: Upload API artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-api
+          path: ./backend/publish/api
+          retention-days: 5
+
+  # ============================================
+  # Frontend Build and Test
+  # ============================================
+  frontend-build:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.deploy_frontend != 'false' }}
+    
+    defaults:
+      run:
+        working-directory: ./frontend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ./frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-app
+          path: ./frontend/.next
+          retention-days: 5
+
+  # ============================================
+  # Deploy Backend to Azure
+  # ============================================
+  deploy-backend:
+    name: Deploy Backend
+    runs-on: ubuntu-latest
+    needs: backend-build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    
+    steps:
+      - name: Download backend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-api
+          path: ./backend-api
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get App Service name
+        id: get-app-name
+        run: |
+          APP_NAME=$(az webapp list --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query "[?contains(name, 'api')].name" -o tsv | head -1)
+          echo "app_name=$APP_NAME" >> $GITHUB_OUTPUT
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ steps.get-app-name.outputs.app_name }}
+          package: ./backend-api
+
+      - name: Output Backend Deployment
+        run: |
+          echo "### Backend Deployment Complete :white_check_mark:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Deployed to: ${{ steps.get-app-name.outputs.app_name }}" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # Deploy Frontend to Azure
+  # ============================================
+  deploy-frontend:
+    name: Deploy Frontend
+    runs-on: ubuntu-latest
+    needs: frontend-build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-app
+          path: ./frontend/.next
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get Static Web App name
+        id: get-swa-name
+        run: |
+          SWA_NAME=$(az staticwebapp list --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query "[0].name" -o tsv)
+          echo "swa_name=$SWA_NAME" >> $GITHUB_OUTPUT
+
+      - name: Build and Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          app_location: "./frontend"
+          output_location: ".next"
+          skip_app_build: true
+
+      - name: Output Frontend Deployment
+        run: |
+          echo "### Frontend Deployment Complete :white_check_mark:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Deployed to Azure Static Web Apps" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # Post-Deployment Health Check
+  # ============================================
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    needs: [deploy-backend, deploy-frontend]
+    if: always() && (needs.deploy-backend.result == 'success' || needs.deploy-frontend.result == 'success')
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Check Backend Health
+        if: needs.deploy-backend.result == 'success'
+        run: |
+          APP_URL=$(az webapp show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name $(az webapp list --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query "[?contains(name, 'api')].name" -o tsv | head -1) --query "defaultHostName" -o tsv)
+          
+          echo "Checking health endpoint: https://$APP_URL/health"
+          
+          for i in {1..5}; do
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://$APP_URL/health" || echo "000")
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "✅ Backend health check passed"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $HTTP_STATUS - Retrying in 10s..."
+            sleep 10
+          done
+          
+          echo "❌ Backend health check failed"
+          exit 1
+
+      - name: Deployment Summary
+        run: |
+          echo "### Deployment Summary :clipboard:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | ${{ needs.deploy-backend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | ${{ needs.deploy-frontend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | ${{ github.event.inputs.environment || 'dev' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Run | #${{ github.run_number }} |" >> $GITHUB_STEP_SUMMARY
