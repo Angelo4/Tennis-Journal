@@ -84,8 +84,23 @@ export function SessionCard({
             </p>
           )}
         </div>
-        {session.notes && (
-          <p className="mt-3 text-gray-500 text-sm italic">{session.notes}</p>
+        
+        {/* Notes Section */}
+        {(session.stringNotes || session.notes) && (
+          <div className="mt-3 space-y-2">
+            {session.stringNotes && (
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">String Notes</p>
+                <p className="text-gray-500 text-sm italic">{session.stringNotes}</p>
+              </div>
+            )}
+            {session.notes && (
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Session Notes</p>
+                <p className="text-gray-500 text-sm italic">{session.notes}</p>
+              </div>
+            )}
+          </div>
         )}
       </CardBody>
     </Card>
