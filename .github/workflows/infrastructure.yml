@@ -95,10 +95,10 @@ jobs:
     environment: ${{ github.event.inputs.environment || 'dev' }}
     
     outputs:
-      webAppName: ${{ steps.deploy.outputs.webAppName }}
-      webAppHostname: ${{ steps.deploy.outputs.webAppHostname }}
-      staticWebAppName: ${{ steps.deploy.outputs.staticWebAppName }}
-      staticWebAppHostname: ${{ steps.deploy.outputs.staticWebAppHostname }}
+      apiWebAppName: ${{ steps.deploy.outputs.apiWebAppName }}
+      apiWebAppHostname: ${{ steps.deploy.outputs.apiWebAppHostname }}
+      frontendWebAppName: ${{ steps.deploy.outputs.frontendWebAppName }}
+      frontendWebAppHostname: ${{ steps.deploy.outputs.frontendWebAppHostname }}
       appInsightsConnectionString: ${{ steps.deploy.outputs.appInsightsConnectionString }}
     
     steps:
@@ -137,7 +137,7 @@ jobs:
           echo "| Resource | Value |" >> $GITHUB_STEP_SUMMARY
           echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
           echo "| Resource Group | ${{ env.AZURE_RESOURCE_GROUP }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Web App Name | ${{ steps.deploy.outputs.webAppName }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Web App URL | https://${{ steps.deploy.outputs.webAppHostname }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Static Web App Name | ${{ steps.deploy.outputs.staticWebAppName }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Static Web App URL | https://${{ steps.deploy.outputs.staticWebAppHostname }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| API Web App | ${{ steps.deploy.outputs.apiWebAppName }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| API URL | https://${{ steps.deploy.outputs.apiWebAppHostname }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Web App | ${{ steps.deploy.outputs.frontendWebAppName }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend URL | https://${{ steps.deploy.outputs.frontendWebAppHostname }} |" >> $GITHUB_STEP_SUMMARY

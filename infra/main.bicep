@@ -100,8 +100,8 @@ module appServicePlan 'br/public:avm/res/web/serverfarm:0.4.1' = {
 }
 
 // Web App - Backend .NET 9 API
-module webApp 'br/public:avm/res/web/site:0.15.1' = {
-  name: 'webAppDeployment'
+module apiWebApp 'br/public:avm/res/web/site:0.15.1' = {
+  name: 'apiWebAppDeployment'
   params: {
     name: 'app-${resourcePrefix}-api-${uniqueSuffix}'
     location: location
@@ -130,16 +130,34 @@ module webApp 'br/public:avm/res/web/site:0.15.1' = {
   }
 }
 
-// Static Web App - Frontend Next.js application
-module staticWebApp 'br/public:avm/res/web/static-site:0.7.0' = {
-  name: 'staticWebAppDeployment'
+// Web App - Frontend Next.js application (using App Service instead of Static Web Apps for region availability)
+module frontendWebApp 'br/public:avm/res/web/site:0.15.1' = {
+  name: 'frontendWebAppDeployment'
   params: {
-    name: 'stapp-${resourcePrefix}-${uniqueSuffix}'
+    name: 'app-${resourcePrefix}-web-${uniqueSuffix}'
     location: location
     tags: defaultTags
-    sku: environmentName == 'prod' ? 'Standard' : 'Free'
-    stagingEnvironmentPolicy: environmentName == 'prod' ? 'Enabled' : 'Disabled'
-    allowConfigFileUpdates: true
+    kind: 'app,linux'
+    serverFarmResourceId: appServicePlan.outputs.resourceId
+    managedIdentities: {
+      systemAssigned: true
+    }
+    siteConfig: {
+      linuxFxVersion: 'NODE|20-lts'
+      alwaysOn: environmentName != 'dev'
+      http20Enabled: true
+      minTlsVersion: '1.2'
+      ftpsState: 'Disabled'
+    }
+    appSettingsKeyValuePairs: {
+      APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
+      WEBSITE_RUN_FROM_PACKAGE: '1'
+      NODE_ENV: environmentName == 'prod' ? 'production' : 'development'
+      NEXT_PUBLIC_API_URL: 'https://app-${resourcePrefix}-api-${uniqueSuffix}.azurewebsites.net'
+    }
+    httpsOnly: true
+    publicNetworkAccess: 'Enabled'
+    clientAffinityEnabled: false
   }
 }
 
@@ -171,20 +189,20 @@ output appServicePlanId string = appServicePlan.outputs.resourceId
 @description('The name of the App Service Plan')
 output appServicePlanName string = appServicePlan.outputs.name
 
-@description('The resource ID of the Web App')
-output webAppId string = webApp.outputs.resourceId
+@description('The resource ID of the API Web App')
+output apiWebAppId string = apiWebApp.outputs.resourceId
 
-@description('The name of the Web App')
-output webAppName string = webApp.outputs.name
+@description('The name of the API Web App')
+output apiWebAppName string = apiWebApp.outputs.name
 
-@description('The default hostname of the Web App')
-output webAppHostname string = webApp.outputs.defaultHostname
+@description('The default hostname of the API Web App')
+output apiWebAppHostname string = apiWebApp.outputs.defaultHostname
 
-@description('The resource ID of the Static Web App')
-output staticWebAppId string = staticWebApp.outputs.resourceId
+@description('The resource ID of the Frontend Web App')
+output frontendWebAppId string = frontendWebApp.outputs.resourceId
 
-@description('The name of the Static Web App')
-output staticWebAppName string = staticWebApp.outputs.name
+@description('The name of the Frontend Web App')
+output frontendWebAppName string = frontendWebApp.outputs.name
 
-@description('The default hostname of the Static Web App')
-output staticWebAppHostname string = staticWebApp.outputs.defaultHostname
+@description('The default hostname of the Frontend Web App')
+output frontendWebAppHostname string = frontendWebApp.outputs.defaultHostname

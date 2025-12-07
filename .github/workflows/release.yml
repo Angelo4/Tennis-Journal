@@ -122,11 +122,17 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
 
+      - name: Create deployment package
+        run: |
+          cp -r .next/standalone/. ./deploy/
+          cp -r .next/static ./deploy/.next/static
+          cp -r public ./deploy/public 2>/dev/null || true
+
       - name: Upload frontend artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend-app
-          path: ./frontend/.next
+          path: ./frontend/deploy
           retention-days: 5
 
   # ============================================
@@ -182,14 +188,11 @@ jobs:
     environment: ${{ github.event.inputs.environment || 'dev' }}
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Download frontend artifact
         uses: actions/download-artifact@v4
         with:
           name: frontend-app
-          path: ./frontend/.next
+          path: ./frontend-app
 
       - name: Azure Login
         uses: azure/login@v2
@@ -198,27 +201,23 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Get Static Web App name
-        id: get-swa-name
+      - name: Get Frontend App Service name
+        id: get-app-name
         run: |
-          SWA_NAME=$(az staticwebapp list --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query "[0].name" -o tsv)
-          echo "swa_name=$SWA_NAME" >> $GITHUB_OUTPUT
+          APP_NAME=$(az webapp list --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query "[?contains(name, 'web')].name" -o tsv | head -1)
+          echo "app_name=$APP_NAME" >> $GITHUB_OUTPUT
 
-      - name: Build and Deploy to Azure Static Web Apps
-        uses: Azure/static-web-apps-deploy@v1
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          action: "upload"
-          app_location: "./frontend"
-          output_location: ".next"
-          skip_app_build: true
+          app-name: ${{ steps.get-app-name.outputs.app_name }}
+          package: ./frontend-app
 
       - name: Output Frontend Deployment
         run: |
           echo "### Frontend Deployment Complete :white_check_mark:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Deployed to Azure Static Web Apps" >> $GITHUB_STEP_SUMMARY
+          echo "Deployed to: ${{ steps.get-app-name.outputs.app_name }}" >> $GITHUB_STEP_SUMMARY
 
   # ============================================
   # Post-Deployment Health Check
