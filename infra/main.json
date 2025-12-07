@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.29.47.4906",
-      "templateHash": "10141913839690391602"
+      "templateHash": "13072482397392059154"
     }
   },
   "parameters": {
@@ -74,8 +74,10 @@
         "maxThroughput": 10000
       }
     },
-    "cosmosDbAccountName": "[format('cosmos-{0}-{1}', variables('resourcePrefix'), variables('uniqueSuffix'))]",
+    "shortUniqueSuffix": "[substring(variables('uniqueSuffix'), 0, 6)]",
+    "cosmosDbAccountName": "[format('cosmos-{0}-{1}-{2}', parameters('baseName'), parameters('environmentName'), variables('shortUniqueSuffix'))]",
     "apiWebAppName": "[format('app-{0}-api-{1}', variables('resourcePrefix'), variables('uniqueSuffix'))]",
+    "keyVaultName": "[format('kv-tj-{0}-{1}', parameters('environmentName'), variables('shortUniqueSuffix'))]",
     "roleAssignmentName": "[guid(resourceGroup().id, variables('cosmosDbAccountName'), variables('apiWebAppName'), 'CosmosDbDataContributor')]"
   },
   "resources": [
@@ -15347,7 +15349,7 @@
         "mode": "Incremental",
         "parameters": {
           "name": {
-            "value": "[format('cosmos-{0}-{1}', variables('resourcePrefix'), variables('uniqueSuffix'))]"
+            "value": "[variables('cosmosDbAccountName')]"
           },
           "location": {
             "value": "[parameters('location')]"
@@ -19167,7 +19169,7 @@
         "mode": "Incremental",
         "parameters": {
           "name": {
-            "value": "[format('kv-{0}-{1}', variables('resourcePrefix'), variables('uniqueSuffix'))]"
+            "value": "[variables('keyVaultName')]"
           },
           "location": {
             "value": "[parameters('location')]"

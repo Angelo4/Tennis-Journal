@@ -179,7 +179,7 @@ module frontendWebApp 'br/public:avm/res/web/site:0.15.1' = {
 module cosmosDb 'br/public:avm/res/document-db/database-account:0.11.2' = {
   name: 'cosmosDbDeployment'
   params: {
-    name: 'cosmos-${resourcePrefix}-${uniqueSuffix}'
+    name: cosmosDbAccountName
     location: location
     tags: defaultTags
     // Use serverless for dev to minimize costs
@@ -255,7 +255,7 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.11.2' = {
 module keyVault 'br/public:avm/res/key-vault/vault:0.11.2' = {
   name: 'keyVaultDeployment'
   params: {
-    name: 'kv-${resourcePrefix}-${uniqueSuffix}'
+    name: keyVaultName
     location: location
     tags: defaultTags
     enableRbacAuthorization: true
@@ -289,8 +289,11 @@ module keyVault 'br/public:avm/res/key-vault/vault:0.11.2' = {
 }
 
 // Compute names for role assignment (must be deterministic)
-var cosmosDbAccountName = 'cosmos-${resourcePrefix}-${uniqueSuffix}'
+// Note: Key Vault names must be 3-24 characters, Cosmos DB names must be 3-44 characters
+var shortUniqueSuffix = substring(uniqueSuffix, 0, 6)
+var cosmosDbAccountName = 'cosmos-${baseName}-${environmentName}-${shortUniqueSuffix}'
 var apiWebAppName = 'app-${resourcePrefix}-api-${uniqueSuffix}'
+var keyVaultName = 'kv-tj-${environmentName}-${shortUniqueSuffix}'
 var roleAssignmentName = guid(resourceGroup().id, cosmosDbAccountName, apiWebAppName, 'CosmosDbDataContributor')
 
 // Role assignment for API Web App to access Cosmos DB (using managed identity instead of keys)
