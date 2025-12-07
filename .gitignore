@@ -50,6 +50,10 @@ CodeCoverage/
 # MSBuild Binary and Structured Log
 *.binlog
 
+# App settings (contains secrets)
+appsettings.*.json
+!appsettings.json
+
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
