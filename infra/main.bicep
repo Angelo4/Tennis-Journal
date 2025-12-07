@@ -322,6 +322,8 @@ resource apiWebAppCosmosSettings 'Microsoft.Web/sites/config@2023-12-01' = {
     CosmosDb__Endpoint: cosmosDb.outputs.endpoint
     CosmosDb__DatabaseName: 'TennisJournal'
     CosmosDb__UseManagedIdentity: 'true'
+    // CORS settings - allow frontend to access the API
+    Cors__AllowedOrigins__0: 'https://${frontendWebApp.outputs.defaultHostname}'
   }
   dependsOn: [
     apiWebApp
