@@ -27,6 +27,10 @@ param tags object = {}
 @description('The container image for the frontend app (include registry, repository, and tag)')
 param frontendContainerImage string = ''
 
+@description('The secret used by NextAuth.js for signing tokens')
+@secure()
+param authSecret string = ''
+
 // =============================================================================
 // Variables
 // =============================================================================
@@ -238,6 +242,14 @@ module frontendContainerApp 'br/public:avm/res/app/container-app:0.14.0' = {
           {
             name: 'AUTH_TRUST_HOST'
             value: 'true'
+          }
+          {
+            name: 'AUTH_SECRET'
+            value: !empty(authSecret) ? authSecret : 'placeholder-generate-in-production'
+          }
+          {
+            name: 'NEXT_PUBLIC_API_URL'
+            value: 'https://${apiWebApp.outputs.defaultHostname}'
           }
           {
             name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
