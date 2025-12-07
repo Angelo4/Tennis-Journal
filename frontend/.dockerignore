@@ -15,8 +15,7 @@ coverage
 # Misc
 .DS_Store
 *.pem
-.env
-.env*.local
+.env*
 
 # IDE
 .idea
