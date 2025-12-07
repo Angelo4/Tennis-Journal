@@ -13,6 +13,32 @@ infra/
 └── README.md                     # This file
 ```
 
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Azure Resource Group                           │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   ┌──────────────────┐     ┌──────────────────┐     ┌────────────────┐  │
+│   │  Azure Container │     │  App Service     │     │  Azure Cosmos  │  │
+│   │  Apps (Frontend) │────▶│  (Backend API)   │────▶│  DB            │  │
+│   │  Next.js         │     │  .NET 9          │     │  NoSQL         │  │
+│   └────────┬─────────┘     └────────┬─────────┘     └────────────────┘  │
+│            │                        │                                    │
+│            │                        │                                    │
+│   ┌────────▼─────────┐     ┌────────▼─────────┐     ┌────────────────┐  │
+│   │  Container       │     │  Key Vault       │     │  Log Analytics │  │
+│   │  Registry (ACR)  │     │  (Secrets)       │     │  & App Insights│  │
+│   └──────────────────┘     └──────────────────┘     └────────────────┘  │
+│                                                                          │
+│   ┌──────────────────────────────────────────────────────────────────┐  │
+│   │  Container Apps Managed Environment                               │  │
+│   └──────────────────────────────────────────────────────────────────┘  │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
 ## Resources Deployed
 
 The infrastructure includes:
@@ -21,9 +47,11 @@ The infrastructure includes:
 |----------|-------------|
 | **Log Analytics Workspace** | Central logging and monitoring |
 | **Application Insights** | Application performance monitoring |
-| **App Service Plan** | Linux hosting for the backend API and frontend |
+| **App Service Plan** | Linux hosting for the backend API |
 | **Backend Web App** | .NET 9 backend API with managed identity |
-| **Frontend Web App** | Next.js frontend hosting |
+| **Azure Container Registry** | Container image storage for frontend |
+| **Container Apps Environment** | Managed Kubernetes environment |
+| **Frontend Container App** | Next.js frontend (containerized) |
 | **Azure Cosmos DB** | NoSQL database for Users, Sessions, and Strings |
 | **Azure Key Vault** | Secure storage for secrets and configuration |
 
@@ -38,6 +66,15 @@ The Cosmos DB account is configured with:
   - `Strings` - Partitioned by `/userId`
 - **Serverless** (dev) / **Autoscale** (staging/prod)
 - **Managed Identity** access from the API
+
+## Container Apps Configuration
+
+The frontend is deployed to Azure Container Apps with:
+
+- **Ingress**: External HTTPS on port 3000
+- **Scale**: 0-3 replicas (dev), 1-10 replicas (prod)
+- **Scale Rules**: HTTP concurrent requests (100)
+- **Registry**: Azure Container Registry with managed identity pull
 
 ## Prerequisites
 
@@ -89,27 +126,34 @@ az deployment group what-if \
 
 The infrastructure is automatically deployed via the `.github/workflows/infrastructure.yml` pipeline when changes are pushed to the `infra/` directory.
 
+The application deployment flow is:
+1. **Backend**: Build .NET API → Deploy to App Service
+2. **Frontend**: Build Docker image → Push to ACR → Update Container App
+
 ## Environment Configuration
 
 ### Dev (Current)
 - **App Service Plan**: B1 (Basic, 1 instance)
+- **Container Registry**: Basic SKU
+- **Container App**: 0.25 vCPU, 0.5Gi memory, 0-3 replicas
 - **Cosmos DB**: Serverless (pay-per-request)
 - **Log Analytics Retention**: 30 days
-- **Always On**: Disabled (cost savings)
 - **Key Vault Soft Delete**: 7 days
 
 ### Staging (Future)
 - **App Service Plan**: S1 (Standard, 1 instance)
+- **Container Registry**: Standard SKU
+- **Container App**: 0.5 vCPU, 1Gi memory, 0-3 replicas
 - **Cosmos DB**: Autoscale (400-4000 RU/s)
 - **Log Analytics Retention**: 30 days
-- **Always On**: Enabled
 - **Key Vault Soft Delete**: 7 days
 
 ### Production (Future)
 - **App Service Plan**: P1v3 (Premium, 2 instances)
+- **Container Registry**: Standard SKU
+- **Container App**: 1.0 vCPU, 2Gi memory, 1-10 replicas (zone redundant)
 - **Cosmos DB**: Autoscale (1000-10000 RU/s), Zone Redundant
 - **Log Analytics Retention**: 90 days
-- **Always On**: Enabled
 - **Key Vault Soft Delete**: 90 days
 - **Continuous Backup**: Enabled
 
@@ -121,8 +165,11 @@ After deployment, the following outputs are available:
 |--------|-------------|
 | `apiWebAppName` | Name of the deployed API Web App |
 | `apiWebAppHostname` | Default hostname for the API |
-| `frontendWebAppName` | Name of the Frontend Web App |
-| `frontendWebAppHostname` | Default hostname for the frontend |
+| `containerRegistryName` | Name of the Container Registry |
+| `containerRegistryLoginServer` | ACR login server URL |
+| `containerAppsEnvironmentName` | Name of the Container Apps Environment |
+| `frontendContainerAppName` | Name of the Frontend Container App |
+| `frontendContainerAppFqdn` | FQDN for the frontend |
 | `cosmosDbAccountName` | Name of the Cosmos DB account |
 | `cosmosDbEndpoint` | Cosmos DB account endpoint |
 | `keyVaultName` | Name of the Key Vault |
@@ -131,19 +178,23 @@ After deployment, the following outputs are available:
 
 ## Security Notes
 
-- HTTPS is enforced on all web resources
+- HTTPS is enforced on all resources
 - Minimum TLS version is 1.2
-- FTPS is disabled (deployment via GitHub Actions only)
-- System-assigned managed identity is enabled on the Web App
+- FTPS is disabled on App Service (deployment via GitHub Actions only)
+- System-assigned managed identity for both API and Container App
+- Container Registry uses managed identity (no admin user)
+- Cosmos DB uses RBAC with managed identity (no connection string needed)
 
 ## Cost Estimation (Dev)
 
 | Resource | Estimated Monthly Cost (USD) |
 |----------|------------------------------|
 | App Service Plan (B1) | ~$13 |
+| Container Registry (Basic) | ~$5 |
+| Container Apps | ~$0-5 (scale to zero) |
 | Log Analytics | ~$2-5 (based on ingestion) |
 | Application Insights | Free tier (5GB/month) |
-| Static Web App | Free |
-| **Total** | **~$15-20** |
+| Cosmos DB (Serverless) | ~$0-5 (based on usage) |
+| **Total** | **~$20-30** |
 
 *Costs may vary based on usage and region.*

@@ -24,6 +24,9 @@ param baseName string = 'tennisjournal'
 @description('Tags to apply to all resources')
 param tags object = {}
 
+@description('The container image for the frontend app (include registry, repository, and tag)')
+param frontendContainerImage string = ''
+
 // =============================================================================
 // Variables
 // =============================================================================
@@ -68,6 +71,22 @@ var cosmosDbThroughput = {
     maxThroughput: 10000 // Autoscale 1000-10000 RU/s for prod
   }
 }
+
+// Container Apps resource configuration per environment
+var containerAppsCpu = {
+  dev: '0.25'
+  staging: '0.5'
+  prod: '1.0'
+}
+
+var containerAppsMemory = {
+  dev: '0.5Gi'
+  staging: '1Gi'
+  prod: '2Gi'
+}
+
+// Container Registry name (must be globally unique, alphanumeric only, 5-50 chars)
+var containerRegistryName = 'crtj${environmentName}${shortUniqueSuffix}'
 
 // =============================================================================
 // Modules
@@ -144,37 +163,122 @@ module apiWebApp 'br/public:avm/res/web/site:0.15.1' = {
   }
 }
 
-// Web App - Frontend Next.js application (using App Service instead of Static Web Apps for region availability)
-module frontendWebApp 'br/public:avm/res/web/site:0.15.1' = {
-  name: 'frontendWebAppDeployment'
+// =============================================================================
+// Container Apps Infrastructure for Frontend
+// =============================================================================
+
+// Azure Container Registry - For storing container images
+module containerRegistry 'br/public:avm/res/container-registry/registry:0.8.0' = {
+  name: 'containerRegistryDeployment'
   params: {
-    name: 'app-${resourcePrefix}-web-${uniqueSuffix}'
+    name: containerRegistryName
     location: location
     tags: defaultTags
-    kind: 'app,linux'
-    serverFarmResourceId: appServicePlan.outputs.resourceId
+    acrSku: environmentName == 'prod' ? 'Standard' : 'Basic'
+    acrAdminUserEnabled: false // Use managed identity instead
+    publicNetworkAccess: 'Enabled'
+    // Diagnostic settings
+    diagnosticSettings: [
+      {
+        workspaceResourceId: logAnalytics.outputs.resourceId
+        logCategoriesAndGroups: [
+          { categoryGroup: 'allLogs' }
+        ]
+      }
+    ]
+  }
+}
+
+// Container Apps Managed Environment - Shared environment for container apps
+module containerAppsEnvironment 'br/public:avm/res/app/managed-environment:0.10.1' = {
+  name: 'containerAppsEnvironmentDeployment'
+  params: {
+    name: 'cae-${resourcePrefix}'
+    location: location
+    tags: defaultTags
+    logAnalyticsWorkspaceResourceId: logAnalytics.outputs.resourceId
+    zoneRedundant: environmentName == 'prod'
+  }
+}
+
+// Container App - Frontend Next.js application
+module frontendContainerApp 'br/public:avm/res/app/container-app:0.14.0' = {
+  name: 'frontendContainerAppDeployment'
+  params: {
+    name: 'ca-${resourcePrefix}-web'
+    location: location
+    tags: defaultTags
+    environmentResourceId: containerAppsEnvironment.outputs.resourceId
     managedIdentities: {
       systemAssigned: true
     }
-    siteConfig: {
-      linuxFxVersion: 'NODE|20-lts'
-      alwaysOn: environmentName != 'dev'
-      http20Enabled: true
-      minTlsVersion: '1.2'
-      ftpsState: 'Disabled'
-      appCommandLine: 'node server.js' // Required for Next.js standalone deployment
+    // Container configuration
+    containers: [
+      {
+        name: 'frontend'
+        image: !empty(frontendContainerImage) ? frontendContainerImage : 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+        resources: {
+          cpu: json(containerAppsCpu[environmentName])
+          memory: containerAppsMemory[environmentName]
+        }
+        env: [
+          {
+            name: 'NODE_ENV'
+            value: environmentName == 'prod' ? 'production' : 'development'
+          }
+          {
+            name: 'PORT'
+            value: '3000'
+          }
+          {
+            name: 'HOSTNAME'
+            value: '0.0.0.0'
+          }
+          {
+            name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+            value: appInsights.outputs.connectionString
+          }
+        ]
+      }
+    ]
+    // Ingress configuration - expose the app publicly
+    ingressExternal: true
+    ingressTargetPort: 3000
+    ingressTransport: 'auto'
+    ingressAllowInsecure: false
+    // Scale configuration using scaleSettings
+    scaleSettings: {
+      minReplicas: environmentName == 'prod' ? 1 : 0 // Scale to zero in dev to save costs
+      maxReplicas: environmentName == 'prod' ? 10 : 3
+      rules: [
+        {
+          name: 'http-rule'
+          http: {
+            metadata: {
+              concurrentRequests: '100'
+            }
+          }
+        }
+      ]
     }
-    appSettingsKeyValuePairs: {
-      APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
-      NODE_ENV: environmentName == 'prod' ? 'production' : 'development'
-      NEXT_PUBLIC_API_URL: 'https://app-${resourcePrefix}-api-${uniqueSuffix}.azurewebsites.net'
-      PORT: '8080' // Azure App Service expects port 8080
-      HOSTNAME: '0.0.0.0'
-      SCM_DO_BUILD_DURING_DEPLOYMENT: 'false' // Don't run Oryx build, we deploy pre-built standalone
-    }
-    httpsOnly: true
-    publicNetworkAccess: 'Enabled'
-    clientAffinityEnabled: false
+    // Registry configuration for pulling images
+    registries: [
+      {
+        server: containerRegistry.outputs.loginServer
+        identity: 'system'
+      }
+    ]
+  }
+}
+
+// Role assignment for Container App to pull images from ACR
+module acrPullRoleAssignment 'br/public:avm/ptn/authorization/resource-role-assignment:0.1.1' = {
+  name: 'acrPullRoleAssignmentDeployment'
+  params: {
+    principalId: frontendContainerApp.outputs.systemAssignedMIPrincipalId!
+    resourceId: containerRegistry.outputs.resourceId
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d') // AcrPull
+    principalType: 'ServicePrincipal'
   }
 }
 
@@ -325,8 +429,8 @@ resource apiWebAppCosmosSettings 'Microsoft.Web/sites/config@2023-12-01' = {
     CosmosDb__Endpoint: cosmosDb.outputs.endpoint
     CosmosDb__DatabaseName: 'TennisJournal'
     CosmosDb__UseManagedIdentity: 'true'
-    // CORS settings - allow frontend to access the API
-    Cors__AllowedOrigins__0: 'https://${frontendWebApp.outputs.defaultHostname}'
+    // CORS settings - allow frontend Container App to access the API
+    Cors__AllowedOrigins__0: 'https://${frontendContainerApp.outputs.fqdn}'
   }
   dependsOn: [
     apiWebApp
@@ -370,14 +474,29 @@ output apiWebAppName string = apiWebApp.outputs.name
 @description('The default hostname of the API Web App')
 output apiWebAppHostname string = apiWebApp.outputs.defaultHostname
 
-@description('The resource ID of the Frontend Web App')
-output frontendWebAppId string = frontendWebApp.outputs.resourceId
+@description('The resource ID of the Container Registry')
+output containerRegistryId string = containerRegistry.outputs.resourceId
 
-@description('The name of the Frontend Web App')
-output frontendWebAppName string = frontendWebApp.outputs.name
+@description('The name of the Container Registry')
+output containerRegistryName string = containerRegistry.outputs.name
 
-@description('The default hostname of the Frontend Web App')
-output frontendWebAppHostname string = frontendWebApp.outputs.defaultHostname
+@description('The login server URL of the Container Registry')
+output containerRegistryLoginServer string = containerRegistry.outputs.loginServer
+
+@description('The resource ID of the Container Apps Environment')
+output containerAppsEnvironmentId string = containerAppsEnvironment.outputs.resourceId
+
+@description('The name of the Container Apps Environment')
+output containerAppsEnvironmentName string = containerAppsEnvironment.outputs.name
+
+@description('The resource ID of the Frontend Container App')
+output frontendContainerAppId string = frontendContainerApp.outputs.resourceId
+
+@description('The name of the Frontend Container App')
+output frontendContainerAppName string = frontendContainerApp.outputs.name
+
+@description('The FQDN of the Frontend Container App')
+output frontendContainerAppFqdn string = frontendContainerApp.outputs.fqdn
 
 @description('The resource ID of the Cosmos DB account')
 output cosmosDbAccountId string = cosmosDb.outputs.resourceId
