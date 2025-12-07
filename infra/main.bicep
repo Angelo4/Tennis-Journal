@@ -170,6 +170,7 @@ module frontendWebApp 'br/public:avm/res/web/site:0.15.1' = {
       NEXT_PUBLIC_API_URL: 'https://app-${resourcePrefix}-api-${uniqueSuffix}.azurewebsites.net'
       PORT: '8080' // Azure App Service expects port 8080
       HOSTNAME: '0.0.0.0'
+      SCM_DO_BUILD_DURING_DEPLOYMENT: 'false' // Don't run Oryx build, we deploy pre-built standalone
     }
     httpsOnly: true
     publicNetworkAccess: 'Enabled'
