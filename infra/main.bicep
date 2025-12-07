@@ -56,6 +56,19 @@ var defaultTags = union(tags, {
   ManagedBy: 'Bicep'
 })
 
+// Cosmos DB throughput configuration per environment
+var cosmosDbThroughput = {
+  dev: {
+    maxThroughput: 1000 // Autoscale 100-1000 RU/s for dev
+  }
+  staging: {
+    maxThroughput: 4000 // Autoscale 400-4000 RU/s for staging
+  }
+  prod: {
+    maxThroughput: 10000 // Autoscale 1000-10000 RU/s for prod
+  }
+}
+
 // =============================================================================
 // Modules
 // =============================================================================
@@ -123,6 +136,7 @@ module apiWebApp 'br/public:avm/res/web/site:0.15.1' = {
       APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
       ASPNETCORE_ENVIRONMENT: environmentName == 'prod' ? 'Production' : 'Development'
       WEBSITE_RUN_FROM_PACKAGE: '1'
+      // Cosmos DB settings will be added after cosmosDb module is deployed
     }
     httpsOnly: true
     publicNetworkAccess: 'Enabled'
@@ -159,6 +173,156 @@ module frontendWebApp 'br/public:avm/res/web/site:0.15.1' = {
     publicNetworkAccess: 'Enabled'
     clientAffinityEnabled: false
   }
+}
+
+// Azure Cosmos DB - NoSQL database for storing Users, Sessions, and Strings
+module cosmosDb 'br/public:avm/res/document-db/database-account:0.11.2' = {
+  name: 'cosmosDbDeployment'
+  params: {
+    name: 'cosmos-${resourcePrefix}-${uniqueSuffix}'
+    location: location
+    tags: defaultTags
+    // Use serverless for dev to minimize costs
+    capabilitiesToAdd: environmentName == 'dev' ? ['EnableServerless'] : []
+    // Enable public network access for dev, can be restricted for prod
+    networkRestrictions: {
+      publicNetworkAccess: 'Enabled'
+      networkAclBypass: 'AzureServices'
+    }
+    // Disable local auth in prod for security (use managed identity)
+    disableLocalAuth: environmentName == 'prod'
+    // Allow key-based writes in dev for easier local development
+    disableKeyBasedMetadataWriteAccess: environmentName == 'prod'
+    // Failover location (single region, with zone redundancy for prod)
+    locations: [
+      {
+        locationName: location
+        failoverPriority: 0
+        isZoneRedundant: environmentName == 'prod'
+      }
+    ]
+    // Backup configuration
+    backupPolicyType: environmentName == 'prod' ? 'Continuous' : 'Periodic'
+    backupIntervalInMinutes: 240
+    backupRetentionIntervalInHours: environmentName == 'prod' ? 720 : 8
+    // SQL databases and containers
+    sqlDatabases: [
+      {
+        name: 'TennisJournal'
+        // Use autoscale for non-serverless (staging/prod)
+        autoscaleSettingsMaxThroughput: environmentName != 'dev' ? cosmosDbThroughput[environmentName].maxThroughput : null
+        containers: [
+          {
+            name: 'Users'
+            paths: ['/id'] // Partition by user id for single-user lookups
+            indexingPolicy: {
+              automatic: true
+            }
+          }
+          {
+            name: 'Sessions'
+            paths: ['/userId'] // Partition by userId for multi-tenant support
+            indexingPolicy: {
+              automatic: true
+            }
+          }
+          {
+            name: 'Strings'
+            paths: ['/userId'] // Partition by userId for multi-tenant support
+            indexingPolicy: {
+              automatic: true
+            }
+          }
+        ]
+      }
+    ]
+    // Diagnostic settings for monitoring
+    diagnosticSettings: [
+      {
+        workspaceResourceId: logAnalytics.outputs.resourceId
+        logCategoriesAndGroups: [
+          { categoryGroup: 'allLogs' }
+        ]
+        metricCategories: [
+          { category: 'Requests' }
+        ]
+      }
+    ]
+  }
+}
+
+// Key Vault - For secure storage of secrets (must be deployed before CosmosDB for secrets export)
+module keyVault 'br/public:avm/res/key-vault/vault:0.11.2' = {
+  name: 'keyVaultDeployment'
+  params: {
+    name: 'kv-${resourcePrefix}-${uniqueSuffix}'
+    location: location
+    tags: defaultTags
+    enableRbacAuthorization: true
+    enableSoftDelete: true
+    softDeleteRetentionInDays: environmentName == 'prod' ? 90 : 7
+    // Allow the API web app managed identity to read secrets
+    roleAssignments: [
+      {
+        principalId: apiWebApp.outputs.systemAssignedMIPrincipalId!
+        roleDefinitionIdOrName: 'Key Vault Secrets User'
+        principalType: 'ServicePrincipal'
+      }
+    ]
+    // Store the Cosmos DB endpoint as a secret
+    secrets: [
+      {
+        name: 'CosmosDbEndpoint'
+        value: cosmosDb.outputs.endpoint
+      }
+    ]
+    // Diagnostic settings
+    diagnosticSettings: [
+      {
+        workspaceResourceId: logAnalytics.outputs.resourceId
+        logCategoriesAndGroups: [
+          { categoryGroup: 'allLogs' }
+        ]
+      }
+    ]
+  }
+}
+
+// Compute names for role assignment (must be deterministic)
+var cosmosDbAccountName = 'cosmos-${resourcePrefix}-${uniqueSuffix}'
+var apiWebAppName = 'app-${resourcePrefix}-api-${uniqueSuffix}'
+var roleAssignmentName = guid(resourceGroup().id, cosmosDbAccountName, apiWebAppName, 'CosmosDbDataContributor')
+
+// Role assignment for API Web App to access Cosmos DB (using managed identity instead of keys)
+// This grants the Cosmos DB Built-in Data Contributor role to the API's managed identity
+resource cosmosDbRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-11-15' = {
+  name: '${cosmosDbAccountName}/${roleAssignmentName}'
+  properties: {
+    roleDefinitionId: '${subscription().id}/resourceGroups/${resourceGroup().name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccountName}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002' // Built-in Data Contributor
+    principalId: apiWebApp.outputs.systemAssignedMIPrincipalId!
+    scope: '${subscription().id}/resourceGroups/${resourceGroup().name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccountName}'
+  }
+  dependsOn: [
+    cosmosDb
+  ]
+}
+
+// Update API Web App settings to include Cosmos DB configuration
+// This is done as a separate resource to avoid circular dependencies
+resource apiWebAppCosmosSettings 'Microsoft.Web/sites/config@2023-12-01' = {
+  name: '${apiWebAppName}/appsettings'
+  properties: {
+    APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
+    ASPNETCORE_ENVIRONMENT: environmentName == 'prod' ? 'Production' : 'Development'
+    WEBSITE_RUN_FROM_PACKAGE: '1'
+    // Cosmos DB settings for managed identity access
+    CosmosDb__Endpoint: cosmosDb.outputs.endpoint
+    CosmosDb__DatabaseName: 'TennisJournal'
+    CosmosDb__UseManagedIdentity: 'true'
+  }
+  dependsOn: [
+    apiWebApp
+  ]
 }
 
 // =============================================================================
@@ -206,3 +370,21 @@ output frontendWebAppName string = frontendWebApp.outputs.name
 
 @description('The default hostname of the Frontend Web App')
 output frontendWebAppHostname string = frontendWebApp.outputs.defaultHostname
+
+@description('The resource ID of the Cosmos DB account')
+output cosmosDbAccountId string = cosmosDb.outputs.resourceId
+
+@description('The name of the Cosmos DB account')
+output cosmosDbAccountName string = cosmosDb.outputs.name
+
+@description('The endpoint of the Cosmos DB account')
+output cosmosDbEndpoint string = cosmosDb.outputs.endpoint
+
+@description('The resource ID of the Key Vault')
+output keyVaultId string = keyVault.outputs.resourceId
+
+@description('The name of the Key Vault')
+output keyVaultName string = keyVault.outputs.name
+
+@description('The URI of the Key Vault')
+output keyVaultUri string = keyVault.outputs.uri

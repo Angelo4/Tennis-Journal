@@ -21,9 +21,23 @@ The infrastructure includes:
 |----------|-------------|
 | **Log Analytics Workspace** | Central logging and monitoring |
 | **Application Insights** | Application performance monitoring |
-| **App Service Plan** | Linux hosting for the backend API |
-| **Web App** | .NET 9 backend API |
-| **Static Web App** | Next.js frontend hosting |
+| **App Service Plan** | Linux hosting for the backend API and frontend |
+| **Backend Web App** | .NET 9 backend API with managed identity |
+| **Frontend Web App** | Next.js frontend hosting |
+| **Azure Cosmos DB** | NoSQL database for Users, Sessions, and Strings |
+| **Azure Key Vault** | Secure storage for secrets and configuration |
+
+## Cosmos DB Configuration
+
+The Cosmos DB account is configured with:
+
+- **Database**: `TennisJournal`
+- **Containers**:
+  - `Users` - Partitioned by `/id`
+  - `Sessions` - Partitioned by `/userId`
+  - `Strings` - Partitioned by `/userId`
+- **Serverless** (dev) / **Autoscale** (staging/prod)
+- **Managed Identity** access from the API
 
 ## Prerequisites
 
@@ -79,22 +93,25 @@ The infrastructure is automatically deployed via the `.github/workflows/infrastr
 
 ### Dev (Current)
 - **App Service Plan**: B1 (Basic, 1 instance)
+- **Cosmos DB**: Serverless (pay-per-request)
 - **Log Analytics Retention**: 30 days
-- **Static Web App SKU**: Free
 - **Always On**: Disabled (cost savings)
+- **Key Vault Soft Delete**: 7 days
 
 ### Staging (Future)
 - **App Service Plan**: S1 (Standard, 1 instance)
+- **Cosmos DB**: Autoscale (400-4000 RU/s)
 - **Log Analytics Retention**: 30 days
-- **Static Web App SKU**: Free
 - **Always On**: Enabled
+- **Key Vault Soft Delete**: 7 days
 
 ### Production (Future)
 - **App Service Plan**: P1v3 (Premium, 2 instances)
+- **Cosmos DB**: Autoscale (1000-10000 RU/s), Zone Redundant
 - **Log Analytics Retention**: 90 days
-- **Static Web App SKU**: Standard
 - **Always On**: Enabled
-- **Staging Environments**: Enabled
+- **Key Vault Soft Delete**: 90 days
+- **Continuous Backup**: Enabled
 
 ## Outputs
 
@@ -102,10 +119,14 @@ After deployment, the following outputs are available:
 
 | Output | Description |
 |--------|-------------|
-| `webAppName` | Name of the deployed Web App |
-| `webAppHostname` | Default hostname for the API |
-| `staticWebAppName` | Name of the Static Web App |
-| `staticWebAppHostname` | Default hostname for the frontend |
+| `apiWebAppName` | Name of the deployed API Web App |
+| `apiWebAppHostname` | Default hostname for the API |
+| `frontendWebAppName` | Name of the Frontend Web App |
+| `frontendWebAppHostname` | Default hostname for the frontend |
+| `cosmosDbAccountName` | Name of the Cosmos DB account |
+| `cosmosDbEndpoint` | Cosmos DB account endpoint |
+| `keyVaultName` | Name of the Key Vault |
+| `keyVaultUri` | Key Vault URI |
 | `appInsightsConnectionString` | Connection string for Application Insights |
 
 ## Security Notes
