@@ -7,6 +7,7 @@ import { SESSION_TYPE_LABELS, SURFACE_LABELS } from "@/utils/constants";
 import { formatDateLong, formatRating } from "@/utils/formatters";
 import { YouTubePlayer, type YouTubePlayerHandle } from "./YouTubePlayer";
 import { useUpdateSession } from "@/hooks/useSessions";
+import { Pencil, Trash2 } from "lucide-react";
 
 interface SessionCardProps {
   session: TennisSession;
@@ -102,16 +103,18 @@ export function SessionCard({
               variant="link"
               color="blue"
               onClick={() => onEdit(session)}
+              aria-label="Edit session"
             >
-              Edit
+              <Pencil className="w-4 h-4" />
             </Button>
             <Button
               variant="link"
               color="red"
               onClick={() => onDelete(session.id!)}
               disabled={isDeleting}
+              aria-label="Delete session"
             >
-              Delete
+              <Trash2 className="w-4 h-4" />
             </Button>
           </div>
         }

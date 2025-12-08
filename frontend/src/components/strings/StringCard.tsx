@@ -6,6 +6,7 @@ import { useStringUsage } from "@/hooks/useStrings";
 import { Card, CardHeader, CardBody, CardFooter, Badge, Button, Input } from "@/components/ui";
 import { STRING_TYPE_LABELS } from "@/utils/constants";
 import { formatDate, formatTension } from "@/utils/formatters";
+import { Pencil, Trash2, XCircle, RotateCcw } from "lucide-react";
 
 interface StringCardProps {
   string: TennisString;
@@ -79,8 +80,9 @@ export function StringCard({
               color="blue"
               size="sm"
               onClick={() => onEdit(string)}
+              aria-label="Edit string"
             >
-              Edit
+              <Pencil className="w-4 h-4" />
             </Button>
             {!isRemoved ? (
               <Button
@@ -89,8 +91,9 @@ export function StringCard({
                 size="sm"
                 onClick={handleRemoveClick}
                 disabled={isRemoving}
+                aria-label="Remove string"
               >
-                Remove
+                <XCircle className="w-4 h-4" />
               </Button>
             ) : (
               <Button
@@ -99,8 +102,9 @@ export function StringCard({
                 size="sm"
                 onClick={() => onRestore(string)}
                 disabled={isRestoring}
+                aria-label="Reactivate string"
               >
-                Reactivate
+                <RotateCcw className="w-4 h-4" />
               </Button>
             )}
             <Button
@@ -109,8 +113,9 @@ export function StringCard({
               size="sm"
               onClick={() => onDelete(string.id!)}
               disabled={isDeleting}
+              aria-label="Delete string"
             >
-              Delete
+              <Trash2 className="w-4 h-4" />
             </Button>
           </div>
         }
