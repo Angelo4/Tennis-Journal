@@ -3,16 +3,17 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { StringType } from './StringType';
+import type { StringStatus } from './StringStatus';
 export type UpdateStringRequest = {
     brand?: string | null;
     model?: string | null;
     gauge?: string | null;
-    type?: StringType;
+    type?: StringType | null;
     mainTension?: number | null;
     crossTension?: number | null;
     dateStrung?: string | null;
     dateRemoved?: string | null;
-    isActive?: boolean | null;
+    status?: StringStatus | null;
     notes?: string | null;
 };
 

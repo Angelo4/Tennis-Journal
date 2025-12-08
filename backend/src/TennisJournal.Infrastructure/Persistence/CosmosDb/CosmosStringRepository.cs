@@ -2,6 +2,7 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
 using TennisJournal.Application.Interfaces;
 using TennisJournal.Domain.Entities;
+using TennisJournal.Domain.Enums;
 
 namespace TennisJournal.Infrastructure.Persistence.CosmosDb;
 
@@ -15,10 +16,10 @@ public class CosmosStringRepository : IStringRepository
         _container = database.GetContainer(settings.Value.StringsContainerName);
     }
 
-    public async Task<IEnumerable<TennisString>> GetAllAsync(string userId, bool? isActive = null)
+    public async Task<IEnumerable<TennisString>> GetAllAsync(string userId, StringStatus? status = null)
     {
-        var queryText = isActive.HasValue
-            ? $"SELECT * FROM c WHERE c.userId = @userId AND c.isActive = {isActive.Value.ToString().ToLower()}"
+        var queryText = status.HasValue
+            ? $"SELECT * FROM c WHERE c.userId = @userId AND c.status = {(int)status.Value}"
             : "SELECT * FROM c WHERE c.userId = @userId";
 
         var query = _container.GetItemQueryIterator<TennisString>(
@@ -32,7 +33,7 @@ public class CosmosStringRepository : IStringRepository
             results.AddRange(response);
         }
 
-        return results.OrderByDescending(s => s.DateStrung);
+        return results.OrderByDescending(s => s.CreatedAt);
     }
 
     public async Task<TennisString?> GetByIdAsync(string id, string userId)

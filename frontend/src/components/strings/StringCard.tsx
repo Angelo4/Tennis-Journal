@@ -2,20 +2,19 @@
 
 import { useState } from "react";
 import type { TennisString } from "@/api";
+import { StringStatus } from "@/api";
 import { useStringUsage } from "@/hooks/useStrings";
 import { Card, CardHeader, CardBody, CardFooter, Badge, Button, Input } from "@/components/ui";
-import { STRING_TYPE_LABELS } from "@/utils/constants";
+import { STRING_TYPE_LABELS, STRING_STATUS_LABELS } from "@/utils/constants";
 import { formatDate, formatTension } from "@/utils/formatters";
-import { Pencil, Trash2, XCircle, RotateCcw } from "lucide-react";
+import { Pencil, Trash2, XCircle } from "lucide-react";
 
 interface StringCardProps {
   string: TennisString;
   onEdit: (string: TennisString) => void;
   onRemove: (string: TennisString) => void;
-  onRestore: (string: TennisString) => void;
   onDelete: (id: string) => void;
   isRemoving?: boolean;
-  isRestoring?: boolean;
   isDeleting?: boolean;
 }
 
@@ -49,13 +48,12 @@ export function StringCard({
   string,
   onEdit,
   onRemove,
-  onRestore,
   onDelete,
   isRemoving,
-  isRestoring,
   isDeleting,
 }: StringCardProps) {
-  const isRemoved = string.isActive === false;
+  const isRemoved = string.status === StringStatus.REMOVED;
+  const isStrung = string.status === StringStatus.STRUNG;
   const [showRemoveForm, setShowRemoveForm] = useState(false);
   const [removalDate, setRemovalDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -84,7 +82,7 @@ export function StringCard({
             >
               <Pencil className="w-4 h-4" />
             </Button>
-            {!isRemoved ? (
+            {isStrung && (
               <Button
                 variant="link"
                 color="yellow"
@@ -94,17 +92,6 @@ export function StringCard({
                 aria-label="Remove string"
               >
                 <XCircle className="w-4 h-4" />
-              </Button>
-            ) : (
-              <Button
-                variant="link"
-                color="green"
-                size="sm"
-                onClick={() => onRestore(string)}
-                disabled={isRestoring}
-                aria-label="Reactivate string"
-              >
-                <RotateCcw className="w-4 h-4" />
               </Button>
             )}
             <Button
@@ -124,7 +111,11 @@ export function StringCard({
           <h3 className="text-lg font-semibold text-gray-800">
             {string.brand} {string.model}
           </h3>
-          {isRemoved && <Badge variant="default">Removed</Badge>}
+          <Badge 
+            variant={string.status === StringStatus.INVENTORY ? "info" : string.status === StringStatus.STRUNG ? "success" : "default"}
+          >
+            {STRING_STATUS_LABELS[string.status ?? 0]}
+          </Badge>
         </div>
         <Badge variant="warning">{STRING_TYPE_LABELS[string.type ?? 0]}</Badge>
       </CardHeader>
@@ -170,14 +161,18 @@ export function StringCard({
               <span className="font-medium">Gauge:</span> {string.gauge}
             </p>
           )}
-          <p>
-            <span className="font-medium">Tension:</span>{" "}
-            {formatTension(string.mainTension, string.crossTension)}
-          </p>
-          <p>
-            <span className="font-medium">Strung:</span>{" "}
-            {formatDate(string.dateStrung)}
-          </p>
+          {isStrung && (
+            <>
+              <p>
+                <span className="font-medium">Tension:</span>{" "}
+                {formatTension(string.mainTension, string.crossTension)}
+              </p>
+              <p>
+                <span className="font-medium">Strung:</span>{" "}
+                {formatDate(string.dateStrung)}
+              </p>
+            </>
+          )}
           {isRemoved && string.dateRemoved && (
             <p>
               <span className="font-medium">Removed:</span>{" "}
@@ -191,7 +186,7 @@ export function StringCard({
         )}
       </CardBody>
 
-      {string.id && (
+      {string.id && isStrung && (
         <CardFooter>
           <StringUsageInfo stringId={string.id} />
         </CardFooter>

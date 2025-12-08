@@ -15,19 +15,19 @@ public class TennisStringTests
         tennisString.Id.Should().NotBeNullOrEmpty();
         tennisString.Brand.Should().BeEmpty();
         tennisString.Model.Should().BeEmpty();
-        tennisString.IsActive.Should().BeTrue();
+        tennisString.Status.Should().Be(StringStatus.Inventory);
         tennisString.DateRemoved.Should().BeNull();
     }
 
     [Fact]
-    public void MarkAsRemoved_ShouldSetIsActiveToFalse_AndSetDateRemoved()
+    public void MarkAsRemoved_ShouldSetStatusToRemoved_AndSetDateRemoved()
     {
         // Arrange
         var tennisString = new TennisString
         {
             Brand = "Luxilon",
             Model = "ALU Power",
-            IsActive = true
+            Status = StringStatus.Strung
         };
         var beforeUpdate = tennisString.UpdatedAt;
 
@@ -35,29 +35,31 @@ public class TennisStringTests
         tennisString.MarkAsRemoved();
 
         // Assert
-        tennisString.IsActive.Should().BeFalse();
+        tennisString.Status.Should().Be(StringStatus.Removed);
         tennisString.DateRemoved.Should().NotBeNull();
         tennisString.DateRemoved.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         tennisString.UpdatedAt.Should().BeOnOrAfter(beforeUpdate);
     }
 
     [Fact]
-    public void Restore_ShouldSetIsActiveToTrue_AndClearDateRemoved()
+    public void ReturnToInventory_ShouldSetStatusToInventory_AndClearDates()
     {
         // Arrange
         var tennisString = new TennisString
         {
             Brand = "Luxilon",
             Model = "ALU Power",
-            IsActive = false,
+            Status = StringStatus.Removed,
+            DateStrung = DateTime.UtcNow.AddDays(-30),
             DateRemoved = DateTime.UtcNow.AddDays(-7)
         };
 
         // Act
-        tennisString.Restore();
+        tennisString.ReturnToInventory();
 
         // Assert
-        tennisString.IsActive.Should().BeTrue();
+        tennisString.Status.Should().Be(StringStatus.Inventory);
+        tennisString.DateStrung.Should().BeNull();
         tennisString.DateRemoved.Should().BeNull();
         tennisString.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
     }
@@ -81,7 +83,7 @@ public class TennisStringTests
             CrossTension = 52,
             DateStrung = dateStrung,
             DateRemoved = dateRemoved,
-            IsActive = false,
+            Status = StringStatus.Removed,
             Notes = "Test notes"
         };
 
@@ -95,7 +97,7 @@ public class TennisStringTests
         tennisString.CrossTension.Should().Be(52);
         tennisString.DateStrung.Should().Be(dateStrung);
         tennisString.DateRemoved.Should().Be(dateRemoved);
-        tennisString.IsActive.Should().BeFalse();
+        tennisString.Status.Should().Be(StringStatus.Removed);
         tennisString.Notes.Should().Be("Test notes");
     }
 

@@ -82,15 +82,3 @@ export function useRemoveString() {
     },
   });
 }
-
-export function useRestoreString() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: (id: string) => StringsService.postApiStringsRestore(id),
-    onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: stringKeys.all });
-      queryClient.invalidateQueries({ queryKey: stringKeys.detail(id) });
-    },
-  });
-}

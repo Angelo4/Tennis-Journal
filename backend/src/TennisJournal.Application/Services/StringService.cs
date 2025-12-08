@@ -1,18 +1,18 @@
 using TennisJournal.Application.DTOs.Strings;
 using TennisJournal.Application.Interfaces;
 using TennisJournal.Domain.Entities;
+using TennisJournal.Domain.Enums;
 
 namespace TennisJournal.Application.Services;
 
 public interface IStringService
 {
-    Task<IEnumerable<StringResponse>> GetAllAsync(string userId, bool? isActive = null);
+    Task<IEnumerable<StringResponse>> GetAllAsync(string userId, StringStatus? status = null);
     Task<StringResponse?> GetByIdAsync(string id, string userId);
     Task<StringResponse> CreateAsync(CreateStringRequest request, string userId);
     Task<StringResponse?> UpdateAsync(string id, UpdateStringRequest request, string userId);
     Task<bool> DeleteAsync(string id, string userId);
-    Task<StringResponse?> RemoveAsync(string id, string userId);
-    Task<StringResponse?> RestoreAsync(string id, string userId);
+    Task<StringResponse?> RemoveAsync(string id, string userId, DateTime? dateRemoved = null);
     Task<StringUsageStatsResponse?> GetUsageStatsAsync(string id, string userId);
 }
 
@@ -27,9 +27,9 @@ public class StringService : IStringService
         _sessionRepository = sessionRepository;
     }
 
-    public async Task<IEnumerable<StringResponse>> GetAllAsync(string userId, bool? isActive = null)
+    public async Task<IEnumerable<StringResponse>> GetAllAsync(string userId, StringStatus? status = null)
     {
-        var strings = await _stringRepository.GetAllAsync(userId, isActive);
+        var strings = await _stringRepository.GetAllAsync(userId, status);
         return strings.Select(MapToResponse);
     }
 
@@ -51,7 +51,7 @@ public class StringService : IStringService
             MainTension = request.MainTension,
             CrossTension = request.CrossTension,
             DateStrung = request.DateStrung,
-            IsActive = request.IsActive,
+            Status = request.Status,
             Notes = request.Notes
         };
 
@@ -73,7 +73,7 @@ public class StringService : IStringService
         existing.CrossTension = request.CrossTension ?? existing.CrossTension;
         existing.DateStrung = request.DateStrung ?? existing.DateStrung;
         existing.DateRemoved = request.DateRemoved ?? existing.DateRemoved;
-        existing.IsActive = request.IsActive ?? existing.IsActive;
+        existing.Status = request.Status ?? existing.Status;
         existing.Notes = request.Notes ?? existing.Notes;
         existing.UpdatedAt = DateTime.UtcNow;
 
@@ -86,24 +86,13 @@ public class StringService : IStringService
         return await _stringRepository.DeleteAsync(id, userId);
     }
 
-    public async Task<StringResponse?> RemoveAsync(string id, string userId)
+    public async Task<StringResponse?> RemoveAsync(string id, string userId, DateTime? dateRemoved = null)
     {
         var existing = await _stringRepository.GetByIdAsync(id, userId);
         if (existing == null)
             return null;
 
-        existing.MarkAsRemoved();
-        var updated = await _stringRepository.UpdateAsync(existing);
-        return updated != null ? MapToResponse(updated) : null;
-    }
-
-    public async Task<StringResponse?> RestoreAsync(string id, string userId)
-    {
-        var existing = await _stringRepository.GetByIdAsync(id, userId);
-        if (existing == null)
-            return null;
-
-        existing.Restore();
+        existing.MarkAsRemoved(dateRemoved);
         var updated = await _stringRepository.UpdateAsync(existing);
         return updated != null ? MapToResponse(updated) : null;
     }
@@ -127,7 +116,9 @@ public class StringService : IStringService
                 .Select(s => s.StringFeelingRating!.Value)
                 .DefaultIfEmpty(0)
                 .Average(),
-            DaysSinceStrung: (int)(DateTime.UtcNow - tennisString.DateStrung).TotalDays
+            DaysSinceStrung: tennisString.DateStrung.HasValue 
+                ? (int)(DateTime.UtcNow - tennisString.DateStrung.Value).TotalDays 
+                : 0
         );
     }
 
@@ -141,7 +132,7 @@ public class StringService : IStringService
         CrossTension: entity.CrossTension,
         DateStrung: entity.DateStrung,
         DateRemoved: entity.DateRemoved,
-        IsActive: entity.IsActive,
+        Status: entity.Status,
         Notes: entity.Notes,
         CreatedAt: entity.CreatedAt,
         UpdatedAt: entity.UpdatedAt

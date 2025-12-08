@@ -20,23 +20,31 @@ public class TennisString
     public StringType Type { get; set; }
     public int? MainTension { get; set; }
     public int? CrossTension { get; set; }
-    public DateTime DateStrung { get; set; }
+    public DateTime? DateStrung { get; set; }
     public DateTime? DateRemoved { get; set; }
-    public bool IsActive { get; set; } = true;
+    public StringStatus Status { get; set; } = StringStatus.Inventory;
     public string? Notes { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    public void MarkAsRemoved()
+    public void MarkAsStrung(DateTime? dateStrung = null)
     {
-        IsActive = false;
-        DateRemoved = DateTime.UtcNow;
+        Status = StringStatus.Strung;
+        DateStrung = dateStrung ?? DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void Restore()
+    public void MarkAsRemoved(DateTime? dateRemoved = null)
     {
-        IsActive = true;
+        Status = StringStatus.Removed;
+        DateRemoved = dateRemoved ?? DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void ReturnToInventory()
+    {
+        Status = StringStatus.Inventory;
+        DateStrung = null;
         DateRemoved = null;
         UpdatedAt = DateTime.UtcNow;
     }

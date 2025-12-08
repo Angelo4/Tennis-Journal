@@ -7,6 +7,13 @@ export const STRING_TYPE_LABELS: Record<number, string> = {
   4: "Hybrid",
 };
 
+// String Status Labels
+export const STRING_STATUS_LABELS: Record<number, string> = {
+  0: "Inventory",
+  1: "Strung",
+  2: "Removed",
+};
+
 // Session Type Labels
 export const SESSION_TYPE_LABELS: Record<number, string> = {
   0: "Practice",
@@ -44,6 +51,13 @@ export const STRING_TYPE_OPTIONS = [
   { value: 2, label: "Synthetic Gut" },
   { value: 3, label: "Natural Gut" },
   { value: 4, label: "Hybrid" },
+];
+
+// String Status Options for forms
+export const STRING_STATUS_OPTIONS = [
+  { value: 0, label: "Inventory" },
+  { value: 1, label: "Strung" },
+  { value: 2, label: "Removed" },
 ];
 
 // Session Type Options for forms

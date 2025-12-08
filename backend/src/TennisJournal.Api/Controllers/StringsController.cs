@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TennisJournal.Application.DTOs.Strings;
 using TennisJournal.Application.Services;
+using TennisJournal.Domain.Enums;
 
 namespace TennisJournal.Api.Controllers;
 
@@ -25,13 +26,13 @@ public class StringsController : ControllerBase
     /// <summary>
     /// Get all tennis strings
     /// </summary>
-    /// <param name="isActive">Filter by active status. If null, returns all strings.</param>
+    /// <param name="status">Filter by string status (0=Inventory, 1=Strung, 2=Removed). If null, returns all strings.</param>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<StringResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<StringResponse>>> GetAll([FromQuery] bool? isActive = null)
+    public async Task<ActionResult<IEnumerable<StringResponse>>> GetAll([FromQuery] StringStatus? status = null)
     {
         var userId = GetUserId();
-        var strings = await _stringService.GetAllAsync(userId, isActive);
+        var strings = await _stringService.GetAllAsync(userId, status);
         return Ok(strings);
     }
 
@@ -118,29 +119,15 @@ public class StringsController : ControllerBase
     [HttpPost("{id}/remove")]
     [ProducesResponseType(typeof(StringResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<StringResponse>> Remove(string id)
+    public async Task<ActionResult<StringResponse>> Remove(string id, [FromBody] RemoveStringRequest? request = null)
     {
         var userId = GetUserId();
-        var result = await _stringService.RemoveAsync(id, userId);
-        if (result == null)
-            return NotFound();
-
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// Restore a removed string (mark as active again)
-    /// </summary>
-    [HttpPost("{id}/restore")]
-    [ProducesResponseType(typeof(StringResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<StringResponse>> Restore(string id)
-    {
-        var userId = GetUserId();
-        var result = await _stringService.RestoreAsync(id, userId);
+        var result = await _stringService.RemoveAsync(id, userId, request?.DateRemoved);
         if (result == null)
             return NotFound();
 
         return Ok(result);
     }
 }
+
+public record RemoveStringRequest(DateTime? DateRemoved);

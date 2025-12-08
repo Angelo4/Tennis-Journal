@@ -52,23 +52,23 @@ public class StringsControllerTests
     }
 
     [Fact]
-    public async Task GetAll_WithActiveFilter_ShouldPassFilterToService()
+    public async Task GetAll_WithStrungFilter_ShouldPassFilterToService()
     {
         // Arrange
-        var activeStrings = new List<StringResponse>
+        var strungStrings = new List<StringResponse>
         {
-            CreateTestResponse("1", "Luxilon", "ALU Power", isActive: true)
+            CreateTestResponse("1", "Luxilon", "ALU Power", status: StringStatus.Strung)
         };
-        _stringServiceMock.Setup(x => x.GetAllAsync(TestUserId, true)).ReturnsAsync(activeStrings);
+        _stringServiceMock.Setup(x => x.GetAllAsync(TestUserId, StringStatus.Strung)).ReturnsAsync(strungStrings);
 
         // Act
-        var result = await _sut.GetAll(isActive: true);
+        var result = await _sut.GetAll(status: StringStatus.Strung);
 
         // Assert
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         var returnedStrings = okResult.Value.Should().BeAssignableTo<IEnumerable<StringResponse>>().Subject;
         returnedStrings.Should().HaveCount(1);
-        _stringServiceMock.Verify(x => x.GetAllAsync(TestUserId, true), Times.Once);
+        _stringServiceMock.Verify(x => x.GetAllAsync(TestUserId, StringStatus.Strung), Times.Once);
     }
 
     #endregion
@@ -245,7 +245,7 @@ public class StringsControllerTests
 
     #region Helper Methods
 
-    private static StringResponse CreateTestResponse(string id, string brand, string model, bool isActive = true)
+    private static StringResponse CreateTestResponse(string id, string brand, string model, StringStatus status = StringStatus.Strung)
     {
         return new StringResponse(
             Id: id,
@@ -255,9 +255,9 @@ public class StringsControllerTests
             Type: StringType.Polyester,
             MainTension: 52,
             CrossTension: 50,
-            DateStrung: DateTime.UtcNow,
+            DateStrung: status == StringStatus.Strung ? DateTime.UtcNow : null,
             DateRemoved: null,
-            IsActive: isActive,
+            Status: status,
             Notes: null,
             CreatedAt: DateTime.UtcNow,
             UpdatedAt: DateTime.UtcNow

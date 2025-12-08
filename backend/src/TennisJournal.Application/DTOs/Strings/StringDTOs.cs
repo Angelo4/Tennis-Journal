@@ -9,8 +9,8 @@ public record CreateStringRequest(
     StringType Type,
     int? MainTension,
     int? CrossTension,
-    DateTime DateStrung,
-    bool IsActive = true,
+    DateTime? DateStrung,
+    StringStatus Status = StringStatus.Inventory,
     string? Notes = null
 );
 
@@ -23,7 +23,7 @@ public record UpdateStringRequest(
     int? CrossTension = null,
     DateTime? DateStrung = null,
     DateTime? DateRemoved = null,
-    bool? IsActive = null,
+    StringStatus? Status = null,
     string? Notes = null
 );
 
@@ -35,9 +35,9 @@ public record StringResponse(
     StringType Type,
     int? MainTension,
     int? CrossTension,
-    DateTime DateStrung,
+    DateTime? DateStrung,
     DateTime? DateRemoved,
-    bool IsActive,
+    StringStatus Status,
     string? Notes,
     DateTime CreatedAt,
     DateTime UpdatedAt

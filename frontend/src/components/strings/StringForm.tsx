@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useCreateString, useUpdateString } from "@/hooks/useStrings";
 import type { TennisString, CreateTennisStringRequest } from "@/api";
+import { StringStatus } from "@/api";
 import {
   Button,
   Input,
@@ -12,7 +13,7 @@ import {
   ModalBody,
   ModalFooter,
 } from "@/components/ui";
-import { STRING_TYPE_OPTIONS } from "@/utils/constants";
+import { STRING_TYPE_OPTIONS, STRING_STATUS_OPTIONS } from "@/utils/constants";
 import { formatDateOnlyForInput } from "@/utils/formatters";
 
 interface StringFormProps {
@@ -32,7 +33,8 @@ export function StringForm({ string, onClose }: StringFormProps) {
     type: string?.type ?? 0,
     mainTension: string?.mainTension ?? undefined,
     crossTension: string?.crossTension ?? undefined,
-    dateStrung: formatDateOnlyForInput(string?.dateStrung),
+    dateStrung: string?.status === StringStatus.STRUNG ? formatDateOnlyForInput(string?.dateStrung) : undefined,
+    status: string?.status ?? StringStatus.INVENTORY,
     notes: string?.notes ?? "",
   });
 
@@ -43,9 +45,9 @@ export function StringForm({ string, onClose }: StringFormProps) {
       ...formData,
       brand: formData.brand || "",
       model: formData.model || "",
-      dateStrung: formData.dateStrung
+      dateStrung: formData.dateStrung && formData.status === StringStatus.STRUNG
         ? new Date(formData.dateStrung).toISOString()
-        : new Date().toISOString(),
+        : undefined,
     };
 
     if (isEditing && string?.id) {
@@ -118,39 +120,53 @@ export function StringForm({ string, onClose }: StringFormProps) {
             color="yellow"
           />
 
-          <Input
-            label="Main Tension (lbs)"
-            name="mainTension"
-            type="number"
-            value={formData.mainTension ?? ""}
+          <Select
+            label="Status"
+            name="status"
+            value={formData.status}
             onChange={handleChange}
-            min={30}
-            max={70}
-            placeholder="e.g., 52"
-            color="yellow"
-          />
-
-          <Input
-            label="Cross Tension (lbs)"
-            name="crossTension"
-            type="number"
-            value={formData.crossTension ?? ""}
-            onChange={handleChange}
-            min={30}
-            max={70}
-            placeholder="e.g., 50"
-            color="yellow"
-          />
-
-          <Input
-            label="Date Strung"
-            name="dateStrung"
-            type="date"
-            value={formData.dateStrung}
-            onChange={handleChange}
+            options={STRING_STATUS_OPTIONS}
             color="yellow"
             required
           />
+
+          {formData.status === StringStatus.STRUNG && (
+            <>
+              <Input
+                label="Main Tension (lbs)"
+                name="mainTension"
+                type="number"
+                value={formData.mainTension ?? ""}
+                onChange={handleChange}
+                min={30}
+                max={70}
+                placeholder="e.g., 52"
+                color="yellow"
+              />
+
+              <Input
+                label="Cross Tension (lbs)"
+                name="crossTension"
+                type="number"
+                value={formData.crossTension ?? ""}
+                onChange={handleChange}
+                min={30}
+                max={70}
+                placeholder="e.g., 50"
+                color="yellow"
+              />
+
+              <Input
+                label="Date Strung"
+                name="dateStrung"
+                type="date"
+                value={formData.dateStrung ?? ""}
+                onChange={handleChange}
+                color="yellow"
+                required
+              />
+            </>
+          )}
         </div>
 
         <TextArea

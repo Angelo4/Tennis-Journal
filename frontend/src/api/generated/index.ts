@@ -19,6 +19,7 @@ export type { SessionResponse } from './models/SessionResponse';
 export { SessionType } from './models/SessionType';
 export type { SessionWithStringResponse } from './models/SessionWithStringResponse';
 export type { StringResponse } from './models/StringResponse';
+export { StringStatus } from './models/StringStatus';
 export { StringType } from './models/StringType';
 export type { StringUsageStatsResponse } from './models/StringUsageStatsResponse';
 export type { UpdateSessionRequest } from './models/UpdateSessionRequest';

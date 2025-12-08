@@ -42,18 +42,18 @@ public class StringServiceTests
     }
 
     [Fact]
-    public async Task GetAllAsync_ShouldReturnActiveStrings_WhenFilteredByActive()
+    public async Task GetAllAsync_ShouldReturnStrungStrings_WhenFilteredByStrung()
     {
         // Arrange
-        var activeString = CreateTestString("1", "Luxilon", "ALU Power", isActive: true);
-        _stringRepositoryMock.Setup(x => x.GetAllAsync(TestUserId, true)).ReturnsAsync(new[] { activeString });
+        var strungString = CreateTestString("1", "Luxilon", "ALU Power", status: StringStatus.Strung);
+        _stringRepositoryMock.Setup(x => x.GetAllAsync(TestUserId, StringStatus.Strung)).ReturnsAsync(new[] { strungString });
 
         // Act
-        var result = await _sut.GetAllAsync(TestUserId, isActive: true);
+        var result = await _sut.GetAllAsync(TestUserId, StringStatus.Strung);
 
         // Assert
         result.Should().HaveCount(1);
-        result.First().IsActive.Should().BeTrue();
+        result.First().Status.Should().Be(StringStatus.Strung);
     }
 
     [Fact]
@@ -118,7 +118,7 @@ public class StringServiceTests
             MainTension: 52,
             CrossTension: 50,
             DateStrung: DateTime.UtcNow,
-            IsActive: true,
+            Status: StringStatus.Strung,
             Notes: "First string job"
         );
 
@@ -237,7 +237,7 @@ public class StringServiceTests
     public async Task RemoveAsync_ShouldMarkStringAsRemoved_WhenStringExists()
     {
         // Arrange
-        var existingString = CreateTestString("123", "Luxilon", "ALU Power", isActive: true);
+        var existingString = CreateTestString("123", "Luxilon", "ALU Power", status: StringStatus.Strung);
         _stringRepositoryMock.Setup(x => x.GetByIdAsync("123", TestUserId)).ReturnsAsync(existingString);
         _stringRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<TennisString>())).ReturnsAsync((TennisString s) => s);
 
@@ -246,7 +246,7 @@ public class StringServiceTests
 
         // Assert
         result.Should().NotBeNull();
-        result!.IsActive.Should().BeFalse();
+        result!.Status.Should().Be(StringStatus.Removed);
         result.DateRemoved.Should().NotBeNull();
     }
 
@@ -261,28 +261,6 @@ public class StringServiceTests
 
         // Assert
         result.Should().BeNull();
-    }
-
-    #endregion
-
-    #region RestoreAsync Tests
-
-    [Fact]
-    public async Task RestoreAsync_ShouldRestoreString_WhenStringExists()
-    {
-        // Arrange
-        var existingString = CreateTestString("123", "Luxilon", "ALU Power", isActive: false);
-        existingString.DateRemoved = DateTime.UtcNow.AddDays(-7);
-        _stringRepositoryMock.Setup(x => x.GetByIdAsync("123", TestUserId)).ReturnsAsync(existingString);
-        _stringRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<TennisString>())).ReturnsAsync((TennisString s) => s);
-
-        // Act
-        var result = await _sut.RestoreAsync("123", TestUserId);
-
-        // Assert
-        result.Should().NotBeNull();
-        result!.IsActive.Should().BeTrue();
-        result.DateRemoved.Should().BeNull();
     }
 
     #endregion
@@ -333,7 +311,7 @@ public class StringServiceTests
 
     #region Helper Methods
 
-    private static TennisString CreateTestString(string id, string brand, string model, bool isActive = true)
+    private static TennisString CreateTestString(string id, string brand, string model, StringStatus status = StringStatus.Strung)
     {
         return new TennisString
         {
@@ -345,8 +323,8 @@ public class StringServiceTests
             Type = StringType.Polyester,
             MainTension = 52,
             CrossTension = 50,
-            DateStrung = DateTime.UtcNow,
-            IsActive = isActive,
+            DateStrung = status == StringStatus.Strung ? DateTime.UtcNow : null,
+            Status = status,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

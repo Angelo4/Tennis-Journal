@@ -175,7 +175,7 @@ public class SessionService : ISessionService
         CrossTension: entity.CrossTension,
         DateStrung: entity.DateStrung,
         DateRemoved: entity.DateRemoved,
-        IsActive: entity.IsActive,
+        Status: entity.Status,
         Notes: entity.Notes,
         CreatedAt: entity.CreatedAt,
         UpdatedAt: entity.UpdatedAt

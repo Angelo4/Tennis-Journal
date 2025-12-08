@@ -105,7 +105,7 @@ public class SessionsControllerTests
                 CrossTension: 50,
                 DateStrung: DateTime.UtcNow,
                 DateRemoved: null,
-                IsActive: true,
+                Status: StringStatus.Strung,
                 Notes: null,
                 CreatedAt: DateTime.UtcNow,
                 UpdatedAt: DateTime.UtcNow

@@ -39,7 +39,7 @@ public class InMemoryStringRepository : IStringRepository
             MainTension = 52,
             CrossTension = 50,
             DateStrung = DateTime.UtcNow.AddDays(-14),
-            IsActive = true,
+            Status = StringStatus.Strung,
             Notes = "Great control and spin"
         };
 
@@ -55,7 +55,7 @@ public class InMemoryStringRepository : IStringRepository
             CrossTension = 55,
             DateStrung = DateTime.UtcNow.AddDays(-60),
             DateRemoved = DateTime.UtcNow.AddDays(-7),
-            IsActive = false,
+            Status = StringStatus.Removed,
             Notes = "Comfortable for arm - removed after 53 days"
         };
 
@@ -63,13 +63,13 @@ public class InMemoryStringRepository : IStringRepository
         _strings[string2.Id] = string2;
     }
 
-    public Task<IEnumerable<TennisString>> GetAllAsync(string userId, bool? isActive = null)
+    public Task<IEnumerable<TennisString>> GetAllAsync(string userId, StringStatus? status = null)
     {
         IEnumerable<TennisString> result = _strings.Values.Where(s => s.UserId == userId);
         
-        if (isActive.HasValue)
+        if (status.HasValue)
         {
-            result = result.Where(s => s.IsActive == isActive.Value);
+            result = result.Where(s => s.Status == status.Value);
         }
         
         return Task.FromResult(result);

@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import type { TennisString } from "@/api";
+import { StringStatus } from "@/api";
 import {
   useStrings,
   useDeleteString,
   useRemoveString,
-  useRestoreString,
 } from "@/hooks/useStrings";
 import {
   Button,
@@ -19,26 +19,27 @@ import {
 import { StringCard } from "./StringCard";
 import { StringForm } from "./StringForm";
 
-type StringFilter = "active" | "removed" | "all";
+type StringFilter = "inventory" | "strung" | "removed" | "all";
 
 export function StringsList() {
   const { data: strings, isLoading, error } = useStrings();
   const deleteString = useDeleteString();
   const removeString = useRemoveString();
-  const restoreString = useRestoreString();
 
   const [showForm, setShowForm] = useState(false);
   const [editingString, setEditingString] = useState<TennisString | null>(null);
-  const [filter, setFilter] = useState<StringFilter>("active");
+  const [filter, setFilter] = useState<StringFilter>("strung");
 
   const filteredStrings = strings?.filter((str) => {
-    if (filter === "active") return str.isActive !== false;
-    if (filter === "removed") return str.isActive === false;
+    if (filter === "inventory") return str.status === StringStatus.INVENTORY;
+    if (filter === "strung") return str.status === StringStatus.STRUNG;
+    if (filter === "removed") return str.status === StringStatus.REMOVED;
     return true;
   });
 
-  const activeCount = strings?.filter((s) => s.isActive !== false).length ?? 0;
-  const removedCount = strings?.filter((s) => s.isActive === false).length ?? 0;
+  const inventoryCount = strings?.filter((s) => s.status === StringStatus.INVENTORY).length ?? 0;
+  const strungCount = strings?.filter((s) => s.status === StringStatus.STRUNG).length ?? 0;
+  const removedCount = strings?.filter((s) => s.status === StringStatus.REMOVED).length ?? 0;
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this string setup?")) {
@@ -52,10 +53,6 @@ export function StringsList() {
     }
   };
 
-  const handleRestore = async (str: TennisString) => {
-    restoreString.mutate(str.id!);
-  };
-
   const handleEdit = (str: TennisString) => {
     setEditingString(str);
     setShowForm(true);
@@ -67,8 +64,9 @@ export function StringsList() {
   };
 
   const filterTabs = [
-    { id: "active", label: "Active", icon: "🎾", count: activeCount },
-    { id: "removed", label: "Removed", icon: "📦", count: removedCount },
+    { id: "inventory", label: "Inventory", icon: "📦", count: inventoryCount },
+    { id: "strung", label: "Strung", icon: "🎾", count: strungCount },
+    { id: "removed", label: "Removed", icon: "🗑️", count: removedCount },
     { id: "all", label: "All", count: strings?.length ?? 0 },
   ];
 
@@ -107,16 +105,18 @@ export function StringsList() {
         {/* Content */}
         {filteredStrings && filteredStrings.length === 0 ? (
           <EmptyState
-            icon={filter === "removed" ? "📦" : "🎾"}
+            icon={filter === "inventory" ? "📦" : filter === "strung" ? "🎾" : "🗑️"}
             title={
-              filter === "active"
-                ? "No active strings on your racquet."
+              filter === "inventory"
+                ? "No strings in inventory."
+                : filter === "strung"
+                ? "No strings currently strung on your racquet."
                 : filter === "removed"
                 ? "No removed strings yet."
                 : "No strings added yet."
             }
             description={
-              filter === "active"
+              filter === "inventory" || filter === "strung"
                 ? 'Click "New String" to add your string setup!'
                 : undefined
             }
@@ -129,10 +129,8 @@ export function StringsList() {
                 string={str}
                 onEdit={handleEdit}
                 onRemove={handleRemove}
-                onRestore={handleRestore}
                 onDelete={handleDelete}
                 isRemoving={removeString.isPending}
-                isRestoring={restoreString.isPending}
                 isDeleting={deleteString.isPending}
               />
             ))}

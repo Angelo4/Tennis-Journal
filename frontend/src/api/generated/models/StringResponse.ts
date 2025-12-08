@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { StringType } from './StringType';
+import type { StringStatus } from './StringStatus';
 export type StringResponse = {
     id?: string | null;
     brand?: string | null;
@@ -11,9 +12,9 @@ export type StringResponse = {
     type?: StringType;
     mainTension?: number | null;
     crossTension?: number | null;
-    dateStrung?: string;
+    dateStrung?: string | null;
     dateRemoved?: string | null;
-    isActive?: boolean;
+    status?: StringStatus;
     notes?: string | null;
     createdAt?: string;
     updatedAt?: string;

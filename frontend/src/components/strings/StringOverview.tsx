@@ -27,11 +27,12 @@ import {
 import { useSessions } from "@/hooks/useSessions";
 import { useStrings } from "@/hooks/useStrings";
 import type { TennisString } from "@/api";
+import { StringStatus } from "@/api";
 import { Tabs, StatCard, LoadingContainer } from "@/components/ui";
 import { ChartContainer } from "@/components/charts";
-import { STRING_TYPE_LABELS, CHART_COLORS } from "@/utils/constants";
+import { STRING_TYPE_LABELS, STRING_STATUS_LABELS, CHART_COLORS } from "@/utils/constants";
 
-type StringFilter = "active" | "removed" | "all";
+type StringFilter = "inventory" | "strung" | "removed" | "all";
 
 interface StringStats {
   string: TennisString;
@@ -48,12 +49,13 @@ export function StringOverview() {
   const { data: sessions, isLoading: sessionsLoading } = useSessions();
   const [filter, setFilter] = useState<StringFilter>("all");
 
-  // Filter strings based on active/removed status
+  // Filter strings based on status
   const filteredStrings = useMemo(() => {
     if (!strings) return [];
     return strings.filter((str) => {
-      if (filter === "active") return str.isActive !== false;
-      if (filter === "removed") return str.isActive === false;
+      if (filter === "inventory") return str.status === StringStatus.INVENTORY;
+      if (filter === "strung") return str.status === StringStatus.STRUNG;
+      if (filter === "removed") return str.status === StringStatus.REMOVED;
       return true;
     });
   }, [strings, filter]);
@@ -82,7 +84,7 @@ export function StringOverview() {
 
         const dateStrung = str.dateStrung ? parseISO(str.dateStrung) : new Date();
         const endDate =
-          str.isActive === false && str.dateRemoved
+          str.status === StringStatus.REMOVED && str.dateRemoved
             ? parseISO(str.dateRemoved)
             : new Date();
 
@@ -228,13 +230,15 @@ export function StringOverview() {
   }, [stringStats]);
 
   const isLoading = stringsLoading || sessionsLoading;
-  const activeCount = strings?.filter((s) => s.isActive !== false).length ?? 0;
-  const removedCount = strings?.filter((s) => s.isActive === false).length ?? 0;
+  const inventoryCount = strings?.filter((s) => s.status === StringStatus.INVENTORY).length ?? 0;
+  const strungCount = strings?.filter((s) => s.status === StringStatus.STRUNG).length ?? 0;
+  const removedCount = strings?.filter((s) => s.status === StringStatus.REMOVED).length ?? 0;
 
   const filterTabs = [
     { id: "all", label: "All", icon: "📊", count: strings?.length ?? 0 },
-    { id: "active", label: "Active", icon: "🎾", count: activeCount },
-    { id: "removed", label: "Removed", icon: "📦", count: removedCount },
+    { id: "inventory", label: "Inventory", icon: "📦", count: inventoryCount },
+    { id: "strung", label: "Strung", icon: "🎾", count: strungCount },
+    { id: "removed", label: "Removed", icon: "🗑️", count: removedCount },
   ];
 
   return (
@@ -464,15 +468,17 @@ export function StringOverview() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {stat.string.isActive !== false ? (
-                        <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                          Active
-                        </span>
-                      ) : (
-                        <span className="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
-                          Removed
-                        </span>
-                      )}
+                      <span 
+                        className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
+                          stat.string.status === StringStatus.INVENTORY
+                            ? "bg-blue-100 text-blue-800"
+                            : stat.string.status === StringStatus.STRUNG
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {STRING_STATUS_LABELS[stat.string.status ?? 0]}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
                       {stat.totalSessions}
