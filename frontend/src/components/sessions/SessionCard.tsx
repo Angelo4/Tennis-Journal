@@ -187,112 +187,117 @@ export function SessionCard({
 
             {showVideoSection && (
               <>
-                <YouTubePlayer
-                  ref={playerRef}
-                  videoUrl={session.youTubeVideoUrl}
-                  className="w-full"
-                />
-                <Button
-                  variant="secondary"
-                  color="green"
-                  size="sm"
-                  onClick={handleCaptureTime}
-                  className="w-full"
-                >
-                  Capture Timestamp
-                </Button>
+                <div className="lg:flex lg:gap-4">
+                  {/* Video Player and Controls */}
+                  <div className="lg:flex-1 space-y-3">
+                    <YouTubePlayer
+                      ref={playerRef}
+                      videoUrl={session.youTubeVideoUrl}
+                      className="w-full"
+                    />
+                    <Button
+                      variant="secondary"
+                      color="green"
+                      size="sm"
+                      onClick={handleCaptureTime}
+                      className="w-full"
+                    >
+                      Capture Timestamp
+                    </Button>
 
-                {/* Capture Form */}
-                {showCaptureForm && (
-              <div className="p-4 bg-green-50 rounded-lg space-y-3 border border-green-200">
-                <h4 className="font-medium text-gray-800">Save Timestamp</h4>
-                <Input
-                  label="Time (HH:MM:SS)"
-                  value={captureData.time}
-                  onChange={(e) =>
-                    setCaptureData((prev) => ({ ...prev, time: e.target.value }))
-                  }
-                  color="green"
-                  readOnly
-                />
-                <Input
-                  label="Label"
-                  value={captureData.label}
-                  onChange={(e) =>
-                    setCaptureData((prev) => ({ ...prev, label: e.target.value }))
-                  }
-                  placeholder="e.g., Great serve, Match point"
-                  color="green"
-                />
-                <TextArea
-                  label="Notes (Optional)"
-                  value={captureData.notes}
-                  onChange={(e) =>
-                    setCaptureData((prev) => ({ ...prev, notes: e.target.value }))
-                  }
-                  placeholder="Additional notes..."
-                  rows={2}
-                  color="green"
-                />
-                <div className="flex gap-2">
-                  <Button
-                    variant="primary"
-                    color="green"
-                    onClick={handleSaveTimestamp}
-                    disabled={!captureData.label || updateSession.isPending}
-                    isLoading={updateSession.isPending}
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    color="gray"
-                    onClick={() => {
-                      setShowCaptureForm(false);
-                      setCaptureData({ time: "", label: "", notes: "" });
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-                )}
-
-                {/* Timestamps */}
-                {session.videoTimestamps && session.videoTimestamps.length > 0 && (
-                  <div>
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-                      Timestamps ({session.videoTimestamps.length})
-                    </p>
-                    <div className="space-y-2">
-                      {session.videoTimestamps
-                        .sort((a, b) => a.timeInSeconds! - b.timeInSeconds!)
-                        .map((timestamp, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handleTimestampClick(timestamp.timeInSeconds!)}
-                            className="w-full text-left p-2 rounded-lg bg-gray-50 hover:bg-green-50 transition-colors"
+                    {/* Capture Form */}
+                    {showCaptureForm && (
+                      <div className="p-4 bg-green-50 rounded-lg space-y-3 border border-green-200">
+                        <h4 className="font-medium text-gray-800">Save Timestamp</h4>
+                        <Input
+                          label="Time (HH:MM:SS)"
+                          value={captureData.time}
+                          onChange={(e) =>
+                            setCaptureData((prev) => ({ ...prev, time: e.target.value }))
+                          }
+                          color="green"
+                          readOnly
+                        />
+                        <Input
+                          label="Label"
+                          value={captureData.label}
+                          onChange={(e) =>
+                            setCaptureData((prev) => ({ ...prev, label: e.target.value }))
+                          }
+                          placeholder="e.g., Great serve, Match point"
+                          color="green"
+                        />
+                        <TextArea
+                          label="Notes (Optional)"
+                          value={captureData.notes}
+                          onChange={(e) =>
+                            setCaptureData((prev) => ({ ...prev, notes: e.target.value }))
+                          }
+                          placeholder="Additional notes..."
+                          rows={2}
+                          color="green"
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            variant="primary"
+                            color="green"
+                            onClick={handleSaveTimestamp}
+                            disabled={!captureData.label || updateSession.isPending}
+                            isLoading={updateSession.isPending}
                           >
-                            <div className="flex items-start gap-3">
-                              <span className="font-mono text-sm text-green-600 font-medium whitespace-nowrap">
-                                {formatTime(timestamp.timeInSeconds!)}
-                              </span>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-gray-800">
-                                  {timestamp.label}
-                                </p>
-                                {timestamp.notes && (
-                                  <p className="text-sm text-gray-600 mt-1">
-                                    {timestamp.notes}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                    </div>
+                            Save
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            color="gray"
+                            onClick={() => {
+                              setShowCaptureForm(false);
+                              setCaptureData({ time: "", label: "", notes: "" });
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
+
+                  {/* Timestamps - Right side on large screens, scrollable */}
+                  {session.videoTimestamps && session.videoTimestamps.length > 0 && (
+                    <div className="mt-3 lg:mt-0 lg:w-80">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                        Timestamps ({session.videoTimestamps.length})
+                      </p>
+                      <div className="space-y-2 lg:max-h-96 lg:overflow-y-auto lg:pr-2 lg:scrollbar-thin lg:scrollbar-thumb-gray-300 lg:scrollbar-track-gray-100">
+                        {session.videoTimestamps
+                          .sort((a, b) => a.timeInSeconds! - b.timeInSeconds!)
+                          .map((timestamp, index) => (
+                            <button
+                              key={index}
+                              onClick={() => handleTimestampClick(timestamp.timeInSeconds!)}
+                              className="w-full text-left p-2 rounded-lg bg-gray-50 hover:bg-green-50 transition-colors"
+                            >
+                              <div className="flex items-start gap-3">
+                                <span className="font-mono text-sm text-green-600 font-medium whitespace-nowrap">
+                                  {formatTime(timestamp.timeInSeconds!)}
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-gray-800">
+                                    {timestamp.label}
+                                  </p>
+                                  {timestamp.notes && (
+                                    <p className="text-sm text-gray-600 mt-1">
+                                      {timestamp.notes}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </button>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </>
             )}
           </div>
