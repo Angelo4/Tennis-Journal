@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { TennisSession, TennisString } from "@/api";
-import { Card, CardHeader, CardBody, Badge, Button } from "@/components/ui";
+import { Card, CardHeader, CardBody, Badge, Button, Input, TextArea } from "@/components/ui";
 import { SESSION_TYPE_LABELS, SURFACE_LABELS } from "@/utils/constants";
 import { formatDateLong, formatRating } from "@/utils/formatters";
 import { YouTubePlayer, type YouTubePlayerHandle } from "./YouTubePlayer";
+import { useUpdateSession } from "@/hooks/useSessions";
 
 interface SessionCardProps {
   session: TennisSession;
@@ -23,6 +24,13 @@ export function SessionCard({
   isDeleting,
 }: SessionCardProps) {
   const playerRef = useRef<YouTubePlayerHandle>(null);
+  const updateSession = useUpdateSession();
+  const [showCaptureForm, setShowCaptureForm] = useState(false);
+  const [captureData, setCaptureData] = useState({
+    time: "",
+    label: "",
+    notes: "",
+  });
 
   const getStringName = (stringId: string | null | undefined) => {
     if (!stringId || !strings) return "No string assigned";
@@ -41,6 +49,47 @@ export function SessionCard({
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
     return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
+
+  const handleCaptureTime = async () => {
+    if (!playerRef.current) return;
+    const currentTime = await playerRef.current.getCurrentTime();
+    setCaptureData((prev) => ({
+      ...prev,
+      time: formatTime(Math.floor(currentTime)),
+    }));
+    setShowCaptureForm(true);
+  };
+
+  const handleSaveTimestamp = async () => {
+    if (!captureData.label || !captureData.time) return;
+
+    const timeToSeconds = (time: string): number => {
+      const [h, m, s] = time.split(":").map(Number);
+      return h * 3600 + m * 60 + s;
+    };
+
+    const newTimestamp = {
+      timeInSeconds: timeToSeconds(captureData.time),
+      label: captureData.label,
+      notes: captureData.notes || undefined,
+      createdAt: new Date().toISOString(),
+    };
+
+    const updatedTimestamps = [
+      ...(session.videoTimestamps || []),
+      newTimestamp,
+    ];
+
+    await updateSession.mutateAsync({
+      id: session.id!,
+      data: {
+        videoTimestamps: updatedTimestamps,
+      },
+    });
+
+    setCaptureData({ time: "", label: "", notes: "" });
+    setShowCaptureForm(false);
   };
 
   return (
@@ -131,6 +180,71 @@ export function SessionCard({
               videoUrl={session.youTubeVideoUrl}
               className="w-full"
             />
+            <Button
+              variant="secondary"
+              color="green"
+              size="sm"
+              onClick={handleCaptureTime}
+              className="w-full"
+            >
+              Capture Timestamp
+            </Button>
+
+            {/* Capture Form */}
+            {showCaptureForm && (
+              <div className="p-4 bg-green-50 rounded-lg space-y-3 border border-green-200">
+                <h4 className="font-medium text-gray-800">Save Timestamp</h4>
+                <Input
+                  label="Time (HH:MM:SS)"
+                  value={captureData.time}
+                  onChange={(e) =>
+                    setCaptureData((prev) => ({ ...prev, time: e.target.value }))
+                  }
+                  color="green"
+                  readOnly
+                />
+                <Input
+                  label="Label"
+                  value={captureData.label}
+                  onChange={(e) =>
+                    setCaptureData((prev) => ({ ...prev, label: e.target.value }))
+                  }
+                  placeholder="e.g., Great serve, Match point"
+                  color="green"
+                />
+                <TextArea
+                  label="Notes (Optional)"
+                  value={captureData.notes}
+                  onChange={(e) =>
+                    setCaptureData((prev) => ({ ...prev, notes: e.target.value }))
+                  }
+                  placeholder="Additional notes..."
+                  rows={2}
+                  color="green"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    variant="primary"
+                    color="green"
+                    onClick={handleSaveTimestamp}
+                    disabled={!captureData.label || updateSession.isPending}
+                    isLoading={updateSession.isPending}
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    color="gray"
+                    onClick={() => {
+                      setShowCaptureForm(false);
+                      setCaptureData({ time: "", label: "", notes: "" });
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* Timestamps */}
             {session.videoTimestamps && session.videoTimestamps.length > 0 && (
