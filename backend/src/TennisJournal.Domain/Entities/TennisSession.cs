@@ -40,6 +40,16 @@ public class TennisSession
     /// </summary>
     public string? Notes { get; set; }
     
+    /// <summary>
+    /// YouTube video URL for this session (supports youtube.com/watch?v= and youtu.be/ formats)
+    /// </summary>
+    public string? YouTubeVideoUrl { get; set; }
+    
+    /// <summary>
+    /// Collection of timestamp markers for highlights/clips in the video
+    /// </summary>
+    public List<VideoTimestamp>? VideoTimestamps { get; set; }
+    
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

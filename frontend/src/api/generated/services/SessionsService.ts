@@ -1,20 +1,20 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
-import type { CreateTennisSessionRequest } from '../models/CreateTennisSessionRequest';
-import type { TennisSession } from '../models/TennisSession';
-import type { TennisSessionWithString } from '../models/TennisSessionWithString';
-import type { UpdateTennisSessionRequest } from '../models/UpdateTennisSessionRequest';
+/* eslint-disable */
+import type { CreateSessionRequest } from '../models/CreateSessionRequest';
+import type { SessionResponse } from '../models/SessionResponse';
+import type { SessionWithStringResponse } from '../models/SessionWithStringResponse';
+import type { UpdateSessionRequest } from '../models/UpdateSessionRequest';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class SessionsService {
     /**
-     * @returns TennisSession Success
+     * @returns SessionResponse Success
      * @throws ApiError
      */
-    public static getApiSessions(): CancelablePromise<Array<TennisSession>> {
+    public static getApiSessions(): CancelablePromise<Array<SessionResponse>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/Sessions',
@@ -22,12 +22,12 @@ export class SessionsService {
     }
     /**
      * @param requestBody
-     * @returns TennisSession Created
+     * @returns SessionResponse Created
      * @throws ApiError
      */
     public static postApiSessions(
-        requestBody?: CreateTennisSessionRequest,
-    ): CancelablePromise<TennisSession> {
+        requestBody?: CreateSessionRequest,
+    ): CancelablePromise<SessionResponse> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/Sessions',
@@ -40,12 +40,12 @@ export class SessionsService {
     }
     /**
      * @param id
-     * @returns TennisSession Success
+     * @returns SessionResponse Success
      * @throws ApiError
      */
     public static getApiSessions1(
         id: string,
-    ): CancelablePromise<TennisSession> {
+    ): CancelablePromise<SessionResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/Sessions/{id}',
@@ -60,13 +60,13 @@ export class SessionsService {
     /**
      * @param id
      * @param requestBody
-     * @returns TennisSession Success
+     * @returns SessionResponse Success
      * @throws ApiError
      */
     public static putApiSessions(
         id: string,
-        requestBody?: UpdateTennisSessionRequest,
-    ): CancelablePromise<TennisSession> {
+        requestBody?: UpdateSessionRequest,
+    ): CancelablePromise<SessionResponse> {
         return __request(OpenAPI, {
             method: 'PUT',
             url: '/api/Sessions/{id}',
@@ -102,12 +102,12 @@ export class SessionsService {
     }
     /**
      * @param id
-     * @returns TennisSessionWithString Success
+     * @returns SessionWithStringResponse Success
      * @throws ApiError
      */
     public static getApiSessionsWithString(
         id: string,
-    ): CancelablePromise<TennisSessionWithString> {
+    ): CancelablePromise<SessionWithStringResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/Sessions/{id}/with-string',

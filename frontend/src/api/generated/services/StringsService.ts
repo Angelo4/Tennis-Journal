@@ -1,23 +1,23 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
-import type { CreateTennisStringRequest } from '../models/CreateTennisStringRequest';
-import type { StringUsageStats } from '../models/StringUsageStats';
-import type { TennisString } from '../models/TennisString';
-import type { UpdateTennisStringRequest } from '../models/UpdateTennisStringRequest';
+/* eslint-disable */
+import type { CreateStringRequest } from '../models/CreateStringRequest';
+import type { StringResponse } from '../models/StringResponse';
+import type { StringUsageStatsResponse } from '../models/StringUsageStatsResponse';
+import type { UpdateStringRequest } from '../models/UpdateStringRequest';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class StringsService {
     /**
      * @param isActive
-     * @returns TennisString Success
+     * @returns StringResponse Success
      * @throws ApiError
      */
     public static getApiStrings(
         isActive?: boolean,
-    ): CancelablePromise<Array<TennisString>> {
+    ): CancelablePromise<Array<StringResponse>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/Strings',
@@ -28,12 +28,12 @@ export class StringsService {
     }
     /**
      * @param requestBody
-     * @returns TennisString Created
+     * @returns StringResponse Created
      * @throws ApiError
      */
     public static postApiStrings(
-        requestBody?: CreateTennisStringRequest,
-    ): CancelablePromise<TennisString> {
+        requestBody?: CreateStringRequest,
+    ): CancelablePromise<StringResponse> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/Strings',
@@ -46,12 +46,12 @@ export class StringsService {
     }
     /**
      * @param id
-     * @returns TennisString Success
+     * @returns StringResponse Success
      * @throws ApiError
      */
     public static getApiStrings1(
         id: string,
-    ): CancelablePromise<TennisString> {
+    ): CancelablePromise<StringResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/Strings/{id}',
@@ -66,13 +66,13 @@ export class StringsService {
     /**
      * @param id
      * @param requestBody
-     * @returns TennisString Success
+     * @returns StringResponse Success
      * @throws ApiError
      */
     public static putApiStrings(
         id: string,
-        requestBody?: UpdateTennisStringRequest,
-    ): CancelablePromise<TennisString> {
+        requestBody?: UpdateStringRequest,
+    ): CancelablePromise<StringResponse> {
         return __request(OpenAPI, {
             method: 'PUT',
             url: '/api/Strings/{id}',
@@ -107,12 +107,12 @@ export class StringsService {
     }
     /**
      * @param id
-     * @returns StringUsageStats Success
+     * @returns StringUsageStatsResponse Success
      * @throws ApiError
      */
     public static getApiStringsUsage(
         id: string,
-    ): CancelablePromise<StringUsageStats> {
+    ): CancelablePromise<StringUsageStatsResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/Strings/{id}/usage',
@@ -126,12 +126,12 @@ export class StringsService {
     }
     /**
      * @param id
-     * @returns TennisString Success
+     * @returns StringResponse Success
      * @throws ApiError
      */
     public static postApiStringsRemove(
         id: string,
-    ): CancelablePromise<TennisString> {
+    ): CancelablePromise<StringResponse> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/Strings/{id}/remove',
@@ -145,12 +145,12 @@ export class StringsService {
     }
     /**
      * @param id
-     * @returns TennisString Success
+     * @returns StringResponse Success
      * @throws ApiError
      */
     public static postApiStringsRestore(
         id: string,
-    ): CancelablePromise<TennisString> {
+    ): CancelablePromise<StringResponse> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/Strings/{id}/restore',

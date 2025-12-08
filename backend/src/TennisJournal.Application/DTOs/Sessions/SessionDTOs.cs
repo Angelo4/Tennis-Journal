@@ -3,6 +3,13 @@ using TennisJournal.Domain.Enums;
 
 namespace TennisJournal.Application.DTOs.Sessions;
 
+public record VideoTimestampDto(
+    int TimeInSeconds,
+    string Label,
+    string? Notes,
+    DateTime CreatedAt
+);
+
 public record CreateSessionRequest(
     DateTime SessionDate,
     SessionType Type,
@@ -12,7 +19,9 @@ public record CreateSessionRequest(
     string? StringId = null,
     int? StringFeelingRating = null,
     string? StringNotes = null,
-    string? Notes = null
+    string? Notes = null,
+    string? YouTubeVideoUrl = null,
+    List<VideoTimestampDto>? VideoTimestamps = null
 );
 
 public record UpdateSessionRequest(
@@ -24,7 +33,9 @@ public record UpdateSessionRequest(
     string? StringId = null,
     int? StringFeelingRating = null,
     string? StringNotes = null,
-    string? Notes = null
+    string? Notes = null,
+    string? YouTubeVideoUrl = null,
+    List<VideoTimestampDto>? VideoTimestamps = null
 );
 
 public record SessionResponse(
@@ -39,7 +50,9 @@ public record SessionResponse(
     string? StringNotes,
     string? Notes,
     DateTime CreatedAt,
-    DateTime UpdatedAt
+    DateTime UpdatedAt,
+    string? YouTubeVideoUrl,
+    List<VideoTimestampDto>? VideoTimestamps
 );
 
 public record SessionWithStringResponse(

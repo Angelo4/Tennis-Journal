@@ -1,11 +1,11 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
-import type { TennisString } from './TennisString';
-export type StringUsageStats = {
+/* eslint-disable */
+import type { StringResponse } from './StringResponse';
+export type StringUsageStatsResponse = {
     stringId?: string | null;
-    string?: TennisString;
+    string?: StringResponse;
     totalSessions?: number;
     totalMinutesPlayed?: number;
     averageFeelingRating?: number;

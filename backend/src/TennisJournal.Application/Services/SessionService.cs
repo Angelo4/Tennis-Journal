@@ -1,5 +1,6 @@
 using TennisJournal.Application.DTOs.Sessions;
 using TennisJournal.Application.DTOs.Strings;
+using TennisJournal.Application.Helpers;
 using TennisJournal.Application.Interfaces;
 using TennisJournal.Domain.Entities;
 
@@ -74,7 +75,9 @@ public class SessionService : ISessionService
             StringId = request.StringId,
             StringFeelingRating = request.StringFeelingRating,
             StringNotes = request.StringNotes,
-            Notes = request.Notes
+            Notes = request.Notes,
+            YouTubeVideoUrl = request.YouTubeVideoUrl,
+            VideoTimestamps = MapVideoTimestamps(request.VideoTimestamps)
         };
 
         var created = await _sessionRepository.CreateAsync(session);
@@ -96,6 +99,13 @@ public class SessionService : ISessionService
         existing.StringFeelingRating = request.StringFeelingRating ?? existing.StringFeelingRating;
         existing.StringNotes = request.StringNotes ?? existing.StringNotes;
         existing.Notes = request.Notes ?? existing.Notes;
+        
+        // Update video fields
+        if (request.YouTubeVideoUrl != null)
+            existing.YouTubeVideoUrl = request.YouTubeVideoUrl;
+        if (request.VideoTimestamps != null)
+            existing.VideoTimestamps = MapVideoTimestamps(request.VideoTimestamps);
+        
         existing.UpdatedAt = DateTime.UtcNow;
 
         var updated = await _sessionRepository.UpdateAsync(existing);
@@ -125,8 +135,35 @@ public class SessionService : ISessionService
         StringNotes: entity.StringNotes,
         Notes: entity.Notes,
         CreatedAt: entity.CreatedAt,
-        UpdatedAt: entity.UpdatedAt
+        UpdatedAt: entity.UpdatedAt,
+        YouTubeVideoUrl: entity.YouTubeVideoUrl,
+        VideoTimestamps: entity.VideoTimestamps?
+            .OrderBy(t => t.TimeInSeconds)
+            .Select(t => new VideoTimestampDto(
+                TimeInSeconds: t.TimeInSeconds,
+                Label: t.Label,
+                Notes: t.Notes,
+                CreatedAt: t.CreatedAt
+            ))
+            .ToList()
     );
+    
+    private static List<VideoTimestamp>? MapVideoTimestamps(List<VideoTimestampDto>? dtos)
+    {
+        if (dtos == null || !dtos.Any())
+            return null;
+            
+        return dtos
+            .OrderBy(dto => dto.TimeInSeconds)
+            .Select(dto => new VideoTimestamp
+            {
+                TimeInSeconds = dto.TimeInSeconds,
+                Label = dto.Label,
+                Notes = dto.Notes,
+                CreatedAt = dto.CreatedAt
+            })
+            .ToList();
+    }
 
     private static StringResponse MapStringToResponse(TennisString entity) => new(
         Id: entity.Id,

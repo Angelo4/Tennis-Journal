@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TennisJournal.Application.DTOs.Sessions;
+using TennisJournal.Application.Helpers;
 using TennisJournal.Application.Services;
 
 namespace TennisJournal.Api.Controllers;
@@ -76,6 +77,13 @@ public class SessionsController : ControllerBase
     {
         var userId = GetUserId();
         
+        // Validate YouTube URL if provided
+        if (!string.IsNullOrEmpty(request.YouTubeVideoUrl) && 
+            !YouTubeHelper.IsValidYouTubeUrl(request.YouTubeVideoUrl))
+        {
+            return BadRequest("Invalid YouTube URL format. Please use youtube.com/watch?v= or youtu.be/ format");
+        }
+        
         // Validate string ID if provided
         if (!string.IsNullOrEmpty(request.StringId))
         {
@@ -98,6 +106,13 @@ public class SessionsController : ControllerBase
     public async Task<ActionResult<SessionResponse>> Update(string id, [FromBody] UpdateSessionRequest request)
     {
         var userId = GetUserId();
+        
+        // Validate YouTube URL if being updated
+        if (!string.IsNullOrEmpty(request.YouTubeVideoUrl) && 
+            !YouTubeHelper.IsValidYouTubeUrl(request.YouTubeVideoUrl))
+        {
+            return BadRequest("Invalid YouTube URL format. Please use youtube.com/watch?v= or youtu.be/ format");
+        }
         
         // Validate string ID if being updated
         if (!string.IsNullOrEmpty(request.StringId))

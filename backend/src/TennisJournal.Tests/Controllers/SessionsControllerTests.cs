@@ -301,7 +301,9 @@ public class SessionsControllerTests
             StringNotes: null,
             Notes: null,
             CreatedAt: DateTime.UtcNow,
-            UpdatedAt: DateTime.UtcNow
+            UpdatedAt: DateTime.UtcNow,
+            YouTubeVideoUrl: null,
+            VideoTimestamps: null
         );
     }
 

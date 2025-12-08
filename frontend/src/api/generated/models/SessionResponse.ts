@@ -1,10 +1,11 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+/* eslint-disable */
 import type { CourtSurface } from './CourtSurface';
 import type { SessionType } from './SessionType';
-export type TennisSession = {
+import type { VideoTimestampDto } from './VideoTimestampDto';
+export type SessionResponse = {
     id?: string | null;
     sessionDate?: string;
     type?: SessionType;
@@ -17,5 +18,7 @@ export type TennisSession = {
     notes?: string | null;
     createdAt?: string;
     updatedAt?: string;
+    youTubeVideoUrl?: string | null;
+    videoTimestamps?: Array<VideoTimestampDto> | null;
 };
 

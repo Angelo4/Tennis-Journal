@@ -25,3 +25,13 @@ export function setAuthToken(token: string | null) {
 
 // Export all generated services and models
 export * from './generated';
+
+// Type aliases for convenience and backwards compatibility
+export type {
+  SessionResponse as TennisSession,
+  StringResponse as TennisString,
+  CreateSessionRequest as CreateTennisSessionRequest,
+  CreateStringRequest as CreateTennisStringRequest,
+  UpdateSessionRequest as UpdateTennisSessionRequest,
+  UpdateStringRequest as UpdateTennisStringRequest,
+} from './generated';

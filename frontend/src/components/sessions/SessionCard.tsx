@@ -1,9 +1,11 @@
 "use client";
 
+import { useRef } from "react";
 import type { TennisSession, TennisString } from "@/api";
 import { Card, CardHeader, CardBody, Badge, Button } from "@/components/ui";
 import { SESSION_TYPE_LABELS, SURFACE_LABELS } from "@/utils/constants";
 import { formatDateLong, formatRating } from "@/utils/formatters";
+import { YouTubePlayer, type YouTubePlayerHandle } from "./YouTubePlayer";
 
 interface SessionCardProps {
   session: TennisSession;
@@ -20,10 +22,25 @@ export function SessionCard({
   onDelete,
   isDeleting,
 }: SessionCardProps) {
+  const playerRef = useRef<YouTubePlayerHandle>(null);
+
   const getStringName = (stringId: string | null | undefined) => {
     if (!stringId || !strings) return "No string assigned";
     const str = strings.find((s) => s.id === stringId);
     return str ? `${str.brand} ${str.model}` : "Unknown string";
+  };
+
+  const handleTimestampClick = (seconds: number) => {
+    if (playerRef.current) {
+      playerRef.current.seekTo(seconds);
+    }
+  };
+
+  const formatTime = (seconds: number): string => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
   return (
@@ -98,6 +115,56 @@ export function SessionCard({
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Session Notes</p>
                 <p className="text-gray-500 text-sm italic">{session.notes}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Video Section */}
+        {session.youTubeVideoUrl && (
+          <div className="mt-4 space-y-3">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Video Recording
+            </p>
+            <YouTubePlayer
+              ref={playerRef}
+              videoUrl={session.youTubeVideoUrl}
+              className="w-full"
+            />
+
+            {/* Timestamps */}
+            {session.videoTimestamps && session.videoTimestamps.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                  Timestamps ({session.videoTimestamps.length})
+                </p>
+                <div className="space-y-2">
+                  {session.videoTimestamps
+                    .sort((a, b) => a.timeInSeconds! - b.timeInSeconds!)
+                    .map((timestamp, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleTimestampClick(timestamp.timeInSeconds!)}
+                        className="w-full text-left p-2 rounded-lg bg-gray-50 hover:bg-green-50 transition-colors"
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="font-mono text-sm text-green-600 font-medium whitespace-nowrap">
+                            {formatTime(timestamp.timeInSeconds!)}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-800">
+                              {timestamp.label}
+                            </p>
+                            {timestamp.notes && (
+                              <p className="text-sm text-gray-600 mt-1">
+                                {timestamp.notes}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                </div>
               </div>
             )}
           </div>

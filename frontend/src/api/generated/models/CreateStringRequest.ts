@@ -1,10 +1,9 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+/* eslint-disable */
 import type { StringType } from './StringType';
-export type TennisString = {
-    id?: string | null;
+export type CreateStringRequest = {
     brand?: string | null;
     model?: string | null;
     gauge?: string | null;
@@ -12,10 +11,7 @@ export type TennisString = {
     mainTension?: number | null;
     crossTension?: number | null;
     dateStrung?: string;
-    dateRemoved?: string | null;
     isActive?: boolean;
     notes?: string | null;
-    createdAt?: string;
-    updatedAt?: string;
 };
 
