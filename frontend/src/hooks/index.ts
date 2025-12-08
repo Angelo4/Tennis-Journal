@@ -21,7 +21,6 @@ export {
   useUpdateString,
   useDeleteString,
   useRemoveString,
-  useRestoreString,
   stringKeys,
 } from './useStrings';
 
