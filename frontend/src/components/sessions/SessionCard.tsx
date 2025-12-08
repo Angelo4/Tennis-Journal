@@ -26,7 +26,7 @@ export function SessionCard({
   const playerRef = useRef<YouTubePlayerHandle>(null);
   const updateSession = useUpdateSession();
   const [showCaptureForm, setShowCaptureForm] = useState(false);
-  const [showVideoSection, setShowVideoSection] = useState(true);
+  const [showVideoSection, setShowVideoSection] = useState(false);
   const [captureData, setCaptureData] = useState({
     time: "",
     label: "",
