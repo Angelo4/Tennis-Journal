@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import type { TennisString } from "@/api";
 import { useStringUsage } from "@/hooks/useStrings";
-import { Card, CardHeader, CardBody, CardFooter, Badge, Button } from "@/components/ui";
+import { Card, CardHeader, CardBody, CardFooter, Badge, Button, Input } from "@/components/ui";
 import { STRING_TYPE_LABELS } from "@/utils/constants";
 import { formatDate, formatTension } from "@/utils/formatters";
 
@@ -54,6 +55,19 @@ export function StringCard({
   isDeleting,
 }: StringCardProps) {
   const isRemoved = string.isActive === false;
+  const [showRemoveForm, setShowRemoveForm] = useState(false);
+  const [removalDate, setRemovalDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+
+  const handleRemoveClick = () => {
+    setShowRemoveForm(true);
+  };
+
+  const handleConfirmRemove = () => {
+    onRemove({ ...string, dateRemoved: new Date(removalDate).toISOString() });
+    setShowRemoveForm(false);
+  };
 
   return (
     <Card dimmed={isRemoved} hoverable>
@@ -73,7 +87,7 @@ export function StringCard({
                 variant="link"
                 color="yellow"
                 size="sm"
-                onClick={() => onRemove(string)}
+                onClick={handleRemoveClick}
                 disabled={isRemoving}
               >
                 Remove
@@ -111,6 +125,40 @@ export function StringCard({
       </CardHeader>
 
       <CardBody>
+        {/* Remove Form */}
+        {showRemoveForm && (
+          <div className="mb-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200 space-y-3">
+            <h4 className="font-medium text-gray-800">Remove String</h4>
+            <Input
+              label="Removal Date"
+              type="date"
+              value={removalDate}
+              onChange={(e) => setRemovalDate(e.target.value)}
+              color="yellow"
+            />
+            <div className="flex gap-2">
+              <Button
+                variant="primary"
+                color="yellow"
+                size="sm"
+                onClick={handleConfirmRemove}
+                disabled={isRemoving}
+                isLoading={isRemoving}
+              >
+                Confirm Remove
+              </Button>
+              <Button
+                variant="secondary"
+                color="gray"
+                size="sm"
+                onClick={() => setShowRemoveForm(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-1 text-sm text-gray-600">
           {string.gauge && (
             <p>
