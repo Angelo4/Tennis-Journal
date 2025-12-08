@@ -26,6 +26,7 @@ export function SessionCard({
   const playerRef = useRef<YouTubePlayerHandle>(null);
   const updateSession = useUpdateSession();
   const [showCaptureForm, setShowCaptureForm] = useState(false);
+  const [showVideoSection, setShowVideoSection] = useState(true);
   const [captureData, setCaptureData] = useState({
     time: "",
     label: "",
@@ -172,26 +173,34 @@ export function SessionCard({
         {/* Video Section */}
         {session.youTubeVideoUrl && (
           <div className="mt-4 space-y-3">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Video Recording
-            </p>
-            <YouTubePlayer
-              ref={playerRef}
-              videoUrl={session.youTubeVideoUrl}
-              className="w-full"
-            />
-            <Button
-              variant="secondary"
-              color="green"
-              size="sm"
-              onClick={handleCaptureTime}
-              className="w-full"
+            <button
+              type="button"
+              onClick={() => setShowVideoSection(!showVideoSection)}
+              className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide hover:text-gray-700 transition-colors"
             >
-              Capture Timestamp
-            </Button>
+              <span>{showVideoSection ? "▼" : "▶"}</span>
+              Video Recording
+            </button>
 
-            {/* Capture Form */}
-            {showCaptureForm && (
+            {showVideoSection && (
+              <>
+                <YouTubePlayer
+                  ref={playerRef}
+                  videoUrl={session.youTubeVideoUrl}
+                  className="w-full"
+                />
+                <Button
+                  variant="secondary"
+                  color="green"
+                  size="sm"
+                  onClick={handleCaptureTime}
+                  className="w-full"
+                >
+                  Capture Timestamp
+                </Button>
+
+                {/* Capture Form */}
+                {showCaptureForm && (
               <div className="p-4 bg-green-50 rounded-lg space-y-3 border border-green-200">
                 <h4 className="font-medium text-gray-800">Save Timestamp</h4>
                 <Input
@@ -244,42 +253,44 @@ export function SessionCard({
                   </Button>
                 </div>
               </div>
-            )}
+                )}
 
-            {/* Timestamps */}
-            {session.videoTimestamps && session.videoTimestamps.length > 0 && (
-              <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-                  Timestamps ({session.videoTimestamps.length})
-                </p>
-                <div className="space-y-2">
-                  {session.videoTimestamps
-                    .sort((a, b) => a.timeInSeconds! - b.timeInSeconds!)
-                    .map((timestamp, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleTimestampClick(timestamp.timeInSeconds!)}
-                        className="w-full text-left p-2 rounded-lg bg-gray-50 hover:bg-green-50 transition-colors"
-                      >
-                        <div className="flex items-start gap-3">
-                          <span className="font-mono text-sm text-green-600 font-medium whitespace-nowrap">
-                            {formatTime(timestamp.timeInSeconds!)}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-gray-800">
-                              {timestamp.label}
-                            </p>
-                            {timestamp.notes && (
-                              <p className="text-sm text-gray-600 mt-1">
-                                {timestamp.notes}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                </div>
-              </div>
+                {/* Timestamps */}
+                {session.videoTimestamps && session.videoTimestamps.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                      Timestamps ({session.videoTimestamps.length})
+                    </p>
+                    <div className="space-y-2">
+                      {session.videoTimestamps
+                        .sort((a, b) => a.timeInSeconds! - b.timeInSeconds!)
+                        .map((timestamp, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleTimestampClick(timestamp.timeInSeconds!)}
+                            className="w-full text-left p-2 rounded-lg bg-gray-50 hover:bg-green-50 transition-colors"
+                          >
+                            <div className="flex items-start gap-3">
+                              <span className="font-mono text-sm text-green-600 font-medium whitespace-nowrap">
+                                {formatTime(timestamp.timeInSeconds!)}
+                              </span>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-gray-800">
+                                  {timestamp.label}
+                                </p>
+                                {timestamp.notes && (
+                                  <p className="text-sm text-gray-600 mt-1">
+                                    {timestamp.notes}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
