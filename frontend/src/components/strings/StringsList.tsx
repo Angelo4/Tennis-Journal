@@ -64,8 +64,8 @@ export function StringsList() {
   };
 
   const filterTabs = [
-    { id: "inventory", label: "Inventory", icon: "📦", count: inventoryCount },
     { id: "strung", label: "Strung", icon: "🎾", count: strungCount },
+    { id: "inventory", label: "Inventory", icon: "📦", count: inventoryCount },
     { id: "removed", label: "Removed", icon: "🗑️", count: removedCount },
     { id: "all", label: "All", count: strings?.length ?? 0 },
   ];

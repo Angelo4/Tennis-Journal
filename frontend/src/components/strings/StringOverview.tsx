@@ -49,14 +49,16 @@ export function StringOverview() {
   const { data: sessions, isLoading: sessionsLoading } = useSessions();
   const [filter, setFilter] = useState<StringFilter>("all");
 
-  // Filter strings based on status
+  // Filter strings based on status (exclude inventory from stats)
   const filteredStrings = useMemo(() => {
     if (!strings) return [];
     return strings.filter((str) => {
-      if (filter === "inventory") return str.status === StringStatus.INVENTORY;
+      // Never include inventory in overview stats
+      if (str.status === StringStatus.INVENTORY) return false;
+      
       if (filter === "strung") return str.status === StringStatus.STRUNG;
       if (filter === "removed") return str.status === StringStatus.REMOVED;
-      return true;
+      return true; // "all" shows strung + removed
     });
   }, [strings, filter]);
 
@@ -230,13 +232,12 @@ export function StringOverview() {
   }, [stringStats]);
 
   const isLoading = stringsLoading || sessionsLoading;
-  const inventoryCount = strings?.filter((s) => s.status === StringStatus.INVENTORY).length ?? 0;
   const strungCount = strings?.filter((s) => s.status === StringStatus.STRUNG).length ?? 0;
   const removedCount = strings?.filter((s) => s.status === StringStatus.REMOVED).length ?? 0;
+  const allCount = strungCount + removedCount;
 
   const filterTabs = [
-    { id: "all", label: "All", icon: "📊", count: strings?.length ?? 0 },
-    { id: "inventory", label: "Inventory", icon: "📦", count: inventoryCount },
+    { id: "all", label: "All", icon: "📊", count: allCount },
     { id: "strung", label: "Strung", icon: "🎾", count: strungCount },
     { id: "removed", label: "Removed", icon: "🗑️", count: removedCount },
   ];
