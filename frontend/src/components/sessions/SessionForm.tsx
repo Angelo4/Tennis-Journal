@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useCreateSession, useUpdateSession } from "@/hooks/useSessions";
 import { useStrings } from "@/hooks/useStrings";
 import type { TennisSession, CreateTennisSessionRequest } from "@/api";
+import { StringStatus } from "@/api";
 import {
   Button,
   Input,
@@ -80,7 +81,7 @@ export function SessionForm({ session, onClose }: SessionFormProps) {
   const stringOptions = [
     { value: "", label: "No string assigned" },
     ...(strings
-      ?.filter((s) => s.isActive !== false)
+      ?.filter((s) => s.status === StringStatus.STRUNG)
       .map((s) => ({
         value: s.id!,
         label: `${s.brand} ${s.model}`,
