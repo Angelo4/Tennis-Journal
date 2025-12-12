@@ -6,8 +6,9 @@ import { Card, CardHeader, CardBody, Badge, Button, Input, TextArea } from "@/co
 import { SESSION_TYPE_LABELS, SURFACE_LABELS } from "@/utils/constants";
 import { formatDateLong, formatRating } from "@/utils/formatters";
 import { YouTubePlayer, type YouTubePlayerHandle } from "./YouTubePlayer";
+import { VideoFocusMode } from "./VideoFocusMode";
 import { useUpdateSession } from "@/hooks/useSessions";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Maximize2 } from "lucide-react";
 
 interface SessionCardProps {
   session: TennisSession;
@@ -28,6 +29,7 @@ export function SessionCard({
   const updateSession = useUpdateSession();
   const [showCaptureForm, setShowCaptureForm] = useState(false);
   const [showVideoSection, setShowVideoSection] = useState(false);
+  const [isFocusMode, setIsFocusMode] = useState(false);
   const [captureData, setCaptureData] = useState({
     time: "",
     label: "",
@@ -190,11 +192,20 @@ export function SessionCard({
                 <div className="lg:flex lg:gap-4">
                   {/* Video Player and Controls */}
                   <div className="lg:flex-1 space-y-3">
-                    <YouTubePlayer
-                      ref={playerRef}
-                      videoUrl={session.youTubeVideoUrl}
-                      className="w-full"
-                    />
+                    <div className="relative">
+                      <YouTubePlayer
+                        ref={playerRef}
+                        videoUrl={session.youTubeVideoUrl}
+                        className="w-full"
+                      />
+                      <button
+                        onClick={() => setIsFocusMode(true)}
+                        className="absolute top-2 right-2 p-2 bg-black/60 hover:bg-black/80 text-white rounded-lg transition-colors"
+                        aria-label="Enter focus mode"
+                      >
+                        <Maximize2 className="w-4 h-4" />
+                      </button>
+                    </div>
                     <Button
                       variant="secondary"
                       color="green"
@@ -302,6 +313,26 @@ export function SessionCard({
             )}
           </div>
         )}
+
+        {/* Focus Mode Modal */}
+        <VideoFocusMode
+          isOpen={isFocusMode}
+          onClose={() => setIsFocusMode(false)}
+          session={session}
+          playerRef={playerRef}
+          showCaptureForm={showCaptureForm}
+          captureData={captureData}
+          onCaptureDataChange={setCaptureData}
+          onCaptureTime={handleCaptureTime}
+          onSaveTimestamp={handleSaveTimestamp}
+          onCancelCapture={() => {
+            setShowCaptureForm(false);
+            setCaptureData({ time: "", label: "", notes: "" });
+          }}
+          onTimestampClick={handleTimestampClick}
+          formatTime={formatTime}
+          isSaving={updateSession.isPending}
+        />
       </CardBody>
     </Card>
   );
