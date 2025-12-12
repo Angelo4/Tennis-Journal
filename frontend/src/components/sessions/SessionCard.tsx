@@ -8,7 +8,7 @@ import { formatDateLong, formatRating } from "@/utils/formatters";
 import { YouTubePlayer, type YouTubePlayerHandle } from "./YouTubePlayer";
 import { VideoFocusMode } from "./VideoFocusMode";
 import { useUpdateSession } from "@/hooks/useSessions";
-import { Pencil, Trash2, Maximize2 } from "lucide-react";
+import { Pencil, Trash2, Maximize2, X } from "lucide-react";
 
 interface SessionCardProps {
   session: TennisSession;
@@ -94,6 +94,17 @@ export function SessionCard({
 
     setCaptureData({ time: "", label: "", notes: "" });
     setShowCaptureForm(false);
+  };
+
+  const handleDeleteTimestamp = async (index: number) => {
+    const updatedTimestamps = session.videoTimestamps?.filter((_, i) => i !== index);
+    
+    await updateSession.mutateAsync({
+      id: session.id!,
+      data: {
+        videoTimestamps: updatedTimestamps,
+      },
+    });
   };
 
   return (
@@ -283,27 +294,41 @@ export function SessionCard({
                         {session.videoTimestamps
                           .sort((a, b) => a.timeInSeconds! - b.timeInSeconds!)
                           .map((timestamp, index) => (
-                            <button
+                            <div
                               key={index}
-                              onClick={() => handleTimestampClick(timestamp.timeInSeconds!)}
-                              className="w-full text-left p-2 rounded-lg bg-gray-50 hover:bg-green-50 transition-colors"
+                              className="w-full flex items-start gap-2 p-2 rounded-lg bg-gray-50 hover:bg-green-50 transition-colors"
                             >
-                              <div className="flex items-start gap-3">
-                                <span className="font-mono text-sm text-green-600 font-medium whitespace-nowrap">
-                                  {formatTime(timestamp.timeInSeconds!)}
-                                </span>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-gray-800">
-                                    {timestamp.label}
-                                  </p>
-                                  {timestamp.notes && (
-                                    <p className="text-sm text-gray-600 mt-1">
-                                      {timestamp.notes}
+                              <button
+                                onClick={() => handleTimestampClick(timestamp.timeInSeconds!)}
+                                className="flex-1 text-left"
+                              >
+                                <div className="flex items-start gap-3">
+                                  <span className="font-mono text-sm text-green-600 font-medium whitespace-nowrap">
+                                    {formatTime(timestamp.timeInSeconds!)}
+                                  </span>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-gray-800">
+                                      {timestamp.label}
                                     </p>
-                                  )}
+                                    {timestamp.notes && (
+                                      <p className="text-sm text-gray-600 mt-1">
+                                        {timestamp.notes}
+                                      </p>
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            </button>
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteTimestamp(index);
+                                }}
+                                className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                aria-label="Delete timestamp"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
                           ))}
                       </div>
                     </div>
@@ -330,6 +355,7 @@ export function SessionCard({
             setCaptureData({ time: "", label: "", notes: "" });
           }}
           onTimestampClick={handleTimestampClick}
+          onDeleteTimestamp={handleDeleteTimestamp}
           formatTime={formatTime}
           isSaving={updateSession.isPending}
         />

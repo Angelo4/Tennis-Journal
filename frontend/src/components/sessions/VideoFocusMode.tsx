@@ -24,6 +24,7 @@ interface VideoFocusModeProps {
   onSaveTimestamp: () => void;
   onCancelCapture: () => void;
   onTimestampClick: (seconds: number) => void;
+  onDeleteTimestamp: (index: number) => void;
   formatTime: (seconds: number) => string;
   isSaving?: boolean;
 }
@@ -40,6 +41,7 @@ export function VideoFocusMode({
   onSaveTimestamp,
   onCancelCapture,
   onTimestampClick,
+  onDeleteTimestamp,
   formatTime,
   isSaving = false,
 }: VideoFocusModeProps) {
@@ -159,27 +161,41 @@ export function VideoFocusMode({
               {session.videoTimestamps
                 .sort((a, b) => a.timeInSeconds! - b.timeInSeconds!)
                 .map((timestamp, index) => (
-                  <button
+                  <div
                     key={index}
-                    onClick={() => onTimestampClick(timestamp.timeInSeconds!)}
-                    className="w-full text-left p-3 rounded-lg bg-gray-800 hover:bg-green-900/30 hover:border-green-500 border border-transparent transition-all"
+                    className="w-full flex items-start gap-2 p-3 rounded-lg bg-gray-800 hover:bg-green-900/30 border border-transparent hover:border-green-500 transition-all"
                   >
-                    <div className="flex items-start gap-3">
-                      <span className="font-mono text-sm text-green-400 font-medium whitespace-nowrap">
-                        {formatTime(timestamp.timeInSeconds!)}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-white">
-                          {timestamp.label}
-                        </p>
-                        {timestamp.notes && (
-                          <p className="text-sm text-gray-400 mt-1">
-                            {timestamp.notes}
+                    <button
+                      onClick={() => onTimestampClick(timestamp.timeInSeconds!)}
+                      className="flex-1 text-left"
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="font-mono text-sm text-green-400 font-medium whitespace-nowrap">
+                          {formatTime(timestamp.timeInSeconds!)}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-white">
+                            {timestamp.label}
                           </p>
-                        )}
+                          {timestamp.notes && (
+                            <p className="text-sm text-gray-400 mt-1">
+                              {timestamp.notes}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteTimestamp(index);
+                      }}
+                      className="p-1 text-gray-400 hover:text-red-400 hover:bg-red-900/20 rounded transition-colors"
+                      aria-label="Delete timestamp"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 ))}
             </div>
           </div>
