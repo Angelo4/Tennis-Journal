@@ -69,8 +69,8 @@ export function VideoFocusMode({
       {/* Content Area */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Video Section */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 flex items-center justify-center p-2 lg:p-4">
+        <div className="flex-1 flex flex-col overflow-y-auto">
+          <div className="flex-1 flex items-center justify-center p-2 lg:p-4 min-h-0">
             <div className="w-full h-full flex items-center justify-center">
               <YouTubePlayer
                 ref={playerRef}
