@@ -95,7 +95,7 @@ export function VideoFocusMode({
 
           {/* Capture Form in Focus Mode */}
           {showCaptureForm && (
-            <div className="mx-2 mb-2 lg:mx-4 lg:mb-4 p-4 bg-gray-900 rounded-lg space-y-3 border border-green-500 w-auto">
+            <div className="mx-2 mb-2 lg:mx-4 lg:mb-4 p-4 bg-gray-900 rounded-lg space-y-3 border border-green-500 w-auto [&_label]:text-gray-300 [&_input]:bg-gray-800 [&_input]:text-white [&_input]:border-gray-700 [&_textarea]:bg-gray-800 [&_textarea]:text-white [&_textarea]:border-gray-700 [&_input::placeholder]:text-gray-500 [&_textarea::placeholder]:text-gray-500">
               <h4 className="font-medium text-white">Save Timestamp</h4>
               <Input
                 label="Time (HH:MM:SS)"
